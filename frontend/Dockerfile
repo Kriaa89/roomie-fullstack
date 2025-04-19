@@ -8,5 +8,5 @@ RUN npm run build --prod
 
 # Stage 2 - Serve with Nginx
 FROM nginx:alpine
-COPY --from=builder /app/dist/roomie-fullstack /usr/share/nginx/html
+COPY --from=builder /app/dist/frontend /usr/share/nginx/html
 EXPOSE 80
