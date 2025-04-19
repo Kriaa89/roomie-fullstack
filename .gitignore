@@ -1,0 +1,13 @@
+# .gitignore
+# Backend
+/target
+*.jar
+*.class
+
+# Frontend
+/node_modules
+/dist
+
+# General
+.env
+.DS_Store
