@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     services:
       mysql:
         image: mysql:8
@@ -23,19 +24,51 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
-    steps:
-    - uses: actions/checkout@v3
+    env:
+      MYSQL_DATABASE: roomie_db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root123@
 
-    - uses: actions/setup-java@v3
+    steps:
+    - name: 📦 Checkout code
+      uses: actions/checkout@v3
+
+    - name: ☕ Set up Java 17
+      uses: actions/setup-java@v3
       with:
         distribution: temurin
         java-version: '17'
 
-    # ✅ Add permission fix here
-    - run: chmod +x backend/mvnw && cd backend && ./mvnw clean install -DskipTests
+    - name: ⚙️ Build Spring Boot backend
+      run: |
+        chmod +x backend/mvnw
+        cd backend
+        ./mvnw clean install -DskipTests
 
-    - uses: actions/setup-node@v3
+    - name: 🟦 Set up Node.js 18
+      uses: actions/setup-node@v3
       with:
         node-version: '18'
 
-    - run: cd frontend && npm install && npm run build --prod
+    - name: 🧱 Build Angular frontend
+      run: |
+        cd frontend
+        npm ci
+        npm run build --prod
+
+    - name: 🧪 (Optional) Run backend tests
+      run: |
+        cd backend
+        ./mvnw test
+
+    - name: 🧪 (Optional) Run frontend tests
+      run: |
+        cd frontend
+        npm run test -- --watch=false --browsers=ChromeHeadless
+
+    # Add a step to upload artifacts (optional)
+    # - name: 📁 Upload build artifacts
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: dist
+    #     path: frontend/dist
