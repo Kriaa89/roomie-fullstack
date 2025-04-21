@@ -12,7 +12,7 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8
+        image: mysql:8.0.36
         env:
           MYSQL_ROOT_PASSWORD: root123@
           MYSQL_DATABASE: roomie_db
@@ -24,51 +24,24 @@ jobs:
           --health-timeout=5s
           --health-retries=5
 
-    env:
-      MYSQL_DATABASE: roomie_db
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root123@
-
     steps:
-    - name: 📦 Checkout code
+    - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: ☕ Set up Java 17
+    - name: Set up Java 17 for Spring Boot
       uses: actions/setup-java@v3
       with:
         distribution: temurin
         java-version: '17'
 
-    - name: ⚙️ Build Spring Boot backend
-      run: |
-        chmod +x backend/mvnw
-        cd backend
-        ./mvnw clean install -DskipTests
+    - name: Placeholder backend build (safe for now)
+      run: echo "No backend code to compile yet"
 
-    - name: 🟦 Set up Node.js 18
+    - name: Set up Node.js 18 for Angular
       uses: actions/setup-node@v3
       with:
         node-version: '18'
 
-    - name: 🧱 Build Angular frontend
-      run: |
-        cd frontend
-        npm ci
-        npm run build --prod
+    - name: Placeholder frontend build (safe for now)
+      run: echo "No frontend code to compile yet"
 
-    - name: 🧪 (Optional) Run backend tests
-      run: |
-        cd backend
-        ./mvnw test
-
-    - name: 🧪 (Optional) Run frontend tests
-      run: |
-        cd frontend
-        npm run test -- --watch=false --browsers=ChromeHeadless
-
-    # Add a step to upload artifacts (optional)
-    # - name: 📁 Upload build artifacts
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: dist
-    #     path: frontend/dist
