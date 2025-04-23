@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI/CD Pipeline 🚀
 
 on:
   push:
@@ -25,22 +25,37 @@ jobs:
           --health-retries=5
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: 🧾 Checkout source code
+        uses: actions/checkout@v3
 
-    - name: Set up Java 17 for Spring Boot
-      uses: actions/setup-java@v3
-      with:
-        distribution: temurin
-        java-version: '17'
+      - name: ☕ Set up Java 17 for Spring Boot
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
 
-    - name: Placeholder backend build (safe for now)
-      run: echo "No backend code to compile yet"
+      - name: 🛠 Placeholder backend build
+        run: echo "No backend code to compile yet"
+        # In future: cd backend && ./mvnw clean install -DskipTests
 
-    - name: Set up Node.js 18 for Angular
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: ⚙️ Set up Node.js 18 for Angular
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 🛠 Placeholder frontend build
+        run: echo "No frontend code to compile yet"
+        # In future: cd frontend && npm install && npm run build --prod
+
+      # 🔒 Optional: Security scan (enable later)
+      # - name: 🔐 Security scan with Trivy
+      #   uses: aquasecurity/trivy-action@v0.10.0
+      #   with:
+      #     image-ref: mysql:8.0.36
+      #     format: table
+      #     exit-code: 1
+      #     severity: CRITICAL,HIGH
+
 
     - name: Placeholder frontend build (safe for now)
       run: echo "No frontend code to compile yet"
