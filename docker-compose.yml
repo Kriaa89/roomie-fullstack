@@ -1,41 +1,56 @@
-version: '3.8'
+name: CI/CD Pipeline
 
-services:
-  backend:
-    build: ./backend
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE}
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-    depends_on:
-      db:
-        condition: service_healthy
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main ]
 
-  frontend:
-    build: ./frontend
-    ports:
-      - "4200:80"
-    depends_on:
-      - backend
+jobs:
+  build: 
+    runs-on: ubuntu-latest
 
-  db:
-    image: mysql:8.0.36
-    ports:
-      - "3307:3306"  # Avoid port conflict with host's MySQL
-    environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-    volumes:
-      - mysql-data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    services:
+      mysql:
+        image: mysql:8.0.36
+        env:
+          MYSQL_ROOT_PASSWORD: root123@
+          MYSQL_DATABASE: roomie_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
-volumes:
-  mysql-data:
+    steps:
+      - name: 🧾 Checkout source code
+        uses: actions/checkout@v3
+
+      - name: ☕ Set up Java 17 for Spring Boot
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: 🛠 Placeholder backend build
+        run: echo "No backend code to compile yet"
+        # In future: cd backend && ./mvnw clean install -DskipTests
+
+      - name: ⚙️ Set up Node.js 18 for Angular
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 🛠 Placeholder frontend build
+        run: echo "No frontend code to compile yet"
+        # In future: cd frontend && npm install && npm run build --prod
+
+      - name: 🔒 Security Scan with Trivy
+        uses: aquasecurity/trivy-action@v0.10.0
+        with:
+          image-ref: mysql:8.0.36
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
