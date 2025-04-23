@@ -19,7 +19,7 @@ services:
       - backend
 
   db:
-    image: mysql:8.0
+    image: mysql:8.0.36
     ports:
       - "3307:3306"  # changed from 3306:3306 to avoid conflict with local MySQL
     environment:
