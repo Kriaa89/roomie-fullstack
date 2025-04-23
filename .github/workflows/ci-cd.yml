@@ -1,6 +1,5 @@
 name: CI/CD Pipeline
 
-
 on:
   push:
     branches: [ main, dev ]
@@ -8,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build: 
     runs-on: ubuntu-latest
 
     services:
@@ -54,6 +53,8 @@ jobs:
       #   with:
       #     image-ref: mysql:8.0.36
       #     format: table
+      #     exit-code: 1
+      #     severity: CRITICAL,HIGH
       #     exit-code: 1
       #     severity: CRITICAL,HIGH
 
