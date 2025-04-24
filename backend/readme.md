@@ -162,6 +162,84 @@ Additionally, owners can define the type of tenant they’re looking for (e.g., 
 
 ---
 
+## 🔌 API Documentation
+
+### Authentication Endpoints
+
+#### 1. Register a New User
+
+**Endpoint:** `POST http://localhost:8080/auth/register`
+
+**Description:** Creates a new user account
+
+**Request:**
+- Method: POST
+- URL: `http://localhost:8080/auth/register`
+- Headers:
+  - Content-Type: application/json
+- Body (raw JSON):
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "password": "securePassword123",
+  "passwordConfirmation": "securePassword123",
+  "phoneNumber": "1234567890",
+  "location": "New York"
+}
+```
+
+**Important Note**: The `passwordConfirmation` field is required and must match the `password` field. Omitting this field will result in a validation error.
+
+**Expected Response:**
+- Status: 200 OK
+- Body:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+#### 2. Login
+
+**Endpoint:** `POST http://localhost:8080/auth/login`
+
+**Description:** Authenticates a user and returns a JWT token
+
+**Request:**
+- Method: POST
+- URL: `http://localhost:8080/auth/login`
+- Headers:
+  - Content-Type: application/json
+- Body (raw JSON):
+```json
+{
+  "email": "john.doe@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Expected Response:**
+- Status: 200 OK
+- Body:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+### Using Authentication Token for Protected Endpoints
+
+For any endpoints that require authentication, you'll need to include the JWT token in the request header:
+
+1. Copy the token received from the login or register response
+2. Add an Authorization header to your request:
+   - Key: Authorization
+   - Value: Bearer eyJhbGciOiJIUzI1NiJ9... (the token you received)
+
+---
+
 ## 🔚 Conclusion
 
 RentMate combines swipe-based simplicity with deep functionality. From role flexibility and audience targeting to calendar scheduling, AI assistance, and verified identities, it creates a modern, secure, and intelligent rental experience.
