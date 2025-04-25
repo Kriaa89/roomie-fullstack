@@ -1,12 +1,20 @@
-import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ApiService } from './api.service';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NgIf],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'frontend';
+  data?: string;
+  constructor(private api: ApiService) {}
+
+  ngOnInit() {
+    this.api.getLanding().subscribe(res => this.data = res);
+  }
 }
