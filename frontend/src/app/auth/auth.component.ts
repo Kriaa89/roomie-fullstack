@@ -32,7 +32,8 @@ export class AuthComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       passwordConfirmation: ['', [Validators.required, Validators.minLength(6)]],
       phoneNumber: ['', Validators.required],
-      location: ['', Validators.required]
+      location: ['', Validators.required],
+      age: ['', Validators.required]
     });
 
     this.loginForm = this.fb.group({
