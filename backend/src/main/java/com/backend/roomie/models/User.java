@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 @Data
@@ -208,5 +209,59 @@ public class User {
     @JoinColumn(name="admin_id")
     private Admin admin;
 
+    // User skills (offered and expected)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<UserSkill> skills;
 
+    // Swipes initiated by this user
+    @OneToMany(mappedBy = "swiper", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Swipe> swipesInitiated;
+
+    // Swipes received by this user
+    @OneToMany(mappedBy = "targetUser", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Swipe> swipesReceived;
+
+    // Matches where this user is user1
+    @OneToMany(mappedBy = "user1", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Matches> matchesAsUser1;
+
+    // Matches where this user is user2
+    @OneToMany(mappedBy = "user2", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Matches> matchesAsUser2;
+
+    // Notifications received by this user
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Notification> notifications;
+
+    // Helper method to get all matches (both as user1 and user2)
+    public List<Matches> getAllMatches() {
+        List<Matches> allMatches = new ArrayList<>();
+        if (matchesAsUser1 != null) {
+            allMatches.addAll(matchesAsUser1);
+        }
+        if (matchesAsUser2 != null) {
+            allMatches.addAll(matchesAsUser2);
+        }
+        return allMatches;
+    }
+
+    // Helper method to get all skills offered
+    public List<UserSkill> getSkillsOffered() {
+        if (skills == null) {
+            return new ArrayList<>();
+        }
+        return skills.stream()
+                .filter(skill -> skill.getType() == UserSkill.SkillType.OFFER)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    // Helper method to get all skills expected/wanted to learn
+    public List<UserSkill> getSkillsExpected() {
+        if (skills == null) {
+            return new ArrayList<>();
+        }
+        return skills.stream()
+                .filter(skill -> skill.getType() == UserSkill.SkillType.LEARN)
+                .collect(java.util.stream.Collectors.toList());
+    }
 }
