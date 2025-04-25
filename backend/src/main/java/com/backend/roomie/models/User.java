@@ -7,28 +7,42 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+
 @Entity
 @Table(name = "users")
+@Builder
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // No-args constructor
+    public User() {
+    }
+
     // first name
     @NotEmpty(message = "First name is required")
     @Size(min = 3, message = "First name must be at least 3 characters long")
     private String firstName;
+
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
+    // age
+    @NotEmpty(message = "Age is required")
+    private Integer age;
 
     // last name
     @NotEmpty(message = "Last name is required")
@@ -74,137 +88,6 @@ public class User {
     @DateTimeFormat(pattern="yyyy-MM-dd")
     private Date updatedAt;
 
-    public List<UserRole> getUserRoles() {
-        return userRoles;
-    }
-
-    public void setUserRoles(List<UserRole> userRoles) {
-        this.userRoles = userRoles;
-    }
-
-    public Date getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Date updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Date getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Date createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Boolean getIdVerified() {
-        return idVerified;
-    }
-
-    public void setIdVerified(Boolean idVerified) {
-        this.idVerified = idVerified;
-    }
-
-    public Boolean getPhoneVerified() {
-        return phoneVerified;
-    }
-
-    public void setPhoneVerified(Boolean phoneVerified) {
-        this.phoneVerified = phoneVerified;
-    }
-
-    public Boolean getEmailVerified() {
-        return emailVerified;
-    }
-
-    public void setEmailVerified(Boolean emailVerified) {
-        this.emailVerified = emailVerified;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public String getPasswordConfirmation() {
-        return passwordConfirmation;
-    }
-
-    public void setPasswordConfirmation(String passwordConfirmation) {
-        this.passwordConfirmation = passwordConfirmation;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    @OneToMany(mappedBy="user", fetch = FetchType.LAZY)
-    private List<UserRole> userRoles;
-
-    public Admin getAdmin() {
-        return admin;
-    }
-
-    public void setAdmin(Admin admin) {
-        this.admin = admin;
-    }
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="admin_id")
     private Admin admin;
@@ -233,35 +116,172 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications;
 
-    // Helper method to get all matches (both as user1 and user2)
-    public List<Matches> getAllMatches() {
-        List<Matches> allMatches = new ArrayList<>();
-        if (matchesAsUser1 != null) {
-            allMatches.addAll(matchesAsUser1);
-        }
-        if (matchesAsUser2 != null) {
-            allMatches.addAll(matchesAsUser2);
-        }
-        return allMatches;
+
+    public Long getId() {
+        return id;
     }
 
-    // Helper method to get all skills offered
-    public List<UserSkill> getSkillsOffered() {
-        if (skills == null) {
-            return new ArrayList<>();
-        }
-        return skills.stream()
-                .filter(skill -> skill.getType() == UserSkill.SkillType.OFFER)
-                .collect(java.util.stream.Collectors.toList());
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    // Helper method to get all skills expected/wanted to learn
-    public List<UserSkill> getSkillsExpected() {
-        if (skills == null) {
-            return new ArrayList<>();
-        }
-        return skills.stream()
-                .filter(skill -> skill.getType() == UserSkill.SkillType.LEARN)
-                .collect(java.util.stream.Collectors.toList());
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getPasswordConfirmation() {
+        return passwordConfirmation;
+    }
+
+    public void setPasswordConfirmation(String passwordConfirmation) {
+        this.passwordConfirmation = passwordConfirmation;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public Boolean getEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(Boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+    public Boolean getPhoneVerified() {
+        return phoneVerified;
+    }
+
+    public void setPhoneVerified(Boolean phoneVerified) {
+        this.phoneVerified = phoneVerified;
+    }
+
+    public Boolean getIdVerified() {
+        return idVerified;
+    }
+
+    public void setIdVerified(Boolean idVerified) {
+        this.idVerified = idVerified;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public Admin getAdmin() {
+        return admin;
+    }
+
+    public void setAdmin(Admin admin) {
+        this.admin = admin;
+    }
+
+    public List<UserSkill> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(List<UserSkill> skills) {
+        this.skills = skills;
+    }
+
+    public List<Swipe> getSwipesInitiated() {
+        return swipesInitiated;
+    }
+
+    public void setSwipesInitiated(List<Swipe> swipesInitiated) {
+        this.swipesInitiated = swipesInitiated;
+    }
+
+    public List<Swipe> getSwipesReceived() {
+        return swipesReceived;
+    }
+
+    public void setSwipesReceived(List<Swipe> swipesReceived) {
+        this.swipesReceived = swipesReceived;
+    }
+
+    public List<Matches> getMatchesAsUser1() {
+        return matchesAsUser1;
+    }
+
+    public void setMatchesAsUser1(List<Matches> matchesAsUser1) {
+        this.matchesAsUser1 = matchesAsUser1;
+    }
+
+    public List<Matches> getMatchesAsUser2() {
+        return matchesAsUser2;
+    }
+
+    public void setMatchesAsUser2(List<Matches> matchesAsUser2) {
+        this.matchesAsUser2 = matchesAsUser2;
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(List<Notification> notifications) {
+        this.notifications = notifications;
     }
 }

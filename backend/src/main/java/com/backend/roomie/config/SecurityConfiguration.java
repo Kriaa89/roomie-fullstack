@@ -43,6 +43,7 @@ public class SecurityConfiguration {
                 .requestMatchers("/api/users/register").permitAll()
                 .requestMatchers("/api/users/login").permitAll()
                 .requestMatchers("/api/users/landing").permitAll()
+                .requestMatchers("/api/users/roles").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

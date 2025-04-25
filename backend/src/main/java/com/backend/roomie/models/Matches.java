@@ -2,20 +2,12 @@ package com.backend.roomie.models;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
 @Entity
 @Table(name = "matches")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class Matches {
 
     @Id
@@ -67,5 +59,74 @@ public class Matches {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = new Date();
+    }
+
+    // No-args constructor
+    public Matches() {
+    }
+
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser1() {
+        return user1;
+    }
+
+    public void setUser1(User user1) {
+        this.user1 = user1;
+    }
+
+    public User getUser2() {
+        return user2;
+    }
+
+    public void setUser2(User user2) {
+        this.user2 = user2;
+    }
+
+    public MatchStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(MatchStatus status) {
+        this.status = status;
+    }
+
+    public Boolean getUser1Notified() {
+        return user1Notified;
+    }
+
+    public void setUser1Notified(Boolean user1Notified) {
+        this.user1Notified = user1Notified;
+    }
+
+    public Boolean getUser2Notified() {
+        return user2Notified;
+    }
+
+    public void setUser2Notified(Boolean user2Notified) {
+        this.user2Notified = user2Notified;
+    }
+
+    public Date getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Date createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Date getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Date updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

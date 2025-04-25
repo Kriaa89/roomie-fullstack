@@ -16,6 +16,10 @@ public class Admin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // No-args constructor
+    public Admin() {
+    }
+
     // username
     @NotEmpty(message = "Username is required")
     @Size(min = 3, message = "Username must be at least 3 characters long")

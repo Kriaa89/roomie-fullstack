@@ -7,7 +7,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -50,6 +53,15 @@ public class UserController {
         }
     }
     /**
+     * Endpoint to get available role types
+     */
+    @GetMapping("/roles")
+    public ResponseEntity<?> getAvailableRoles() {
+        List<UserRole.RoleType> roles = Arrays.asList(UserRole.RoleType.values());
+        return ResponseEntity.ok(roles);
+    }
+
+    /**
      * Endpoint to allow a user to select a role
      */
     @PostMapping("/{userId}/role")
@@ -58,6 +70,46 @@ public class UserController {
             userService.assignRole(userId, role);
             return ResponseEntity.ok("Role assigned successfully");
         } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Endpoint to update user profile
+     * @param userId ID of the user to update
+     * @param userUpdates the updated user details
+     * @return the updated user
+     */
+    @PutMapping("/{userId}/profile")
+    public ResponseEntity<?> updateUserProfile(
+            @PathVariable("userId") Long userId,
+            @RequestBody User userUpdates) {
+        try {
+            // Call service to update user profile
+            User updatedUser = userService.updateUserProfile(userId, userUpdates);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            // Return error message if update fails
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Endpoint to upload profile picture
+     * @param userId ID of the user
+     * @param file the profile picture file
+     * @return the updated user
+     */
+    @PostMapping("/{userId}/profile-picture")
+    public ResponseEntity<?> uploadProfilePicture(
+            @PathVariable("userId") Long userId,
+            @RequestParam("file") MultipartFile file) {
+        try {
+            // Call service to upload profile picture
+            User updatedUser = userService.uploadProfilePicture(userId, file);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            // Return error message if upload fails
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
