@@ -1,9 +1,14 @@
-<div class="min-vh-100 bg-white">
-  <nav class="navbar navbar-expand-md navbar-light bg-light fixed-top">
+<!-- landing.component.html -->
+<div class="landing min-vh-100 bg-white">
+  <!-- Navbar -->
+  <nav
+    class="navbar navbar-expand-md navbar-light bg-light fixed-top"
+    [ngClass]="{'shadow-sm': scrolled}"
+  >
     <div class="container">
       <a class="navbar-brand d-flex align-items-center" routerLink="/">
-        <span class="fs-3 text-primary me-2">🏠</span>
-        <span class="fw-bold">Roomie</span>
+        <img src="assets/logo.svg" alt="RentMate Logo" height="32" class="me-2" />
+        <span class="fw-bold fs-4">RentMate</span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
@@ -12,309 +17,137 @@
         <ul class="navbar-nav ms-auto align-items-center">
           <li class="nav-item"><a class="nav-link" href="#how-it-works">How it works</a></li>
           <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-          <li class="nav-item"><a class="nav-link text-primary" routerLink="/login">Log in</a></li>
+          <!-- dynamic login/avatar -->
+          <ng-container *ngIf="!isLoggedIn">
+            <li class="nav-item"><a class="nav-link text-primary" routerLink="/login">Log in</a></li>
+          </ng-container>
+          <ng-container *ngIf="isLoggedIn">
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle p-0" href="#" role="button" data-bs-toggle="dropdown">
+                <img [src]="userAvatarUrl" class="rounded-circle" alt="Avatar" height="32" width="32">
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" routerLink="/profile">Profile</a></li>
+                <li><a class="dropdown-item" routerLink="/logout">Logout</a></li>
+              </ul>
+            </li>
+          </ng-container>
           <li class="nav-item"><a class="btn btn-primary ms-3" routerLink="/register">Sign up</a></li>
         </ul>
       </div>
     </div>
   </nav>
 
-  <main>
-    <!-- Hero Section - Enhanced with better visual design -->
-    <section class="hero-section position-relative overflow-hidden">
-      <div class="hero-bg"></div>
-      <div class="container position-relative py-5">
-        <div class="row min-vh-75 align-items-center py-5">
-          <div class="col-lg-7 text-center text-lg-start">
-            <h1 class="display-3 fw-bold text-white mb-4">
-              Find Your Perfect <span class="text-warning">Room</span> & <span class="text-warning">Roommate Match</span>
-            </h1>
-            <p class="lead text-white opacity-90 mb-5 fs-4">
-              Smart matching for rooms and complementary skills. Connect with roommates who enhance your living experience.
-            </p>
-            <div class="d-grid d-md-flex gap-3">
-              <a routerLink="/register" class="btn btn-warning btn-lg px-5 py-3 fw-semibold">
-                <i class="bi bi-search me-2"></i> Find a Room
-              </a>
-              <a routerLink="/register" class="btn btn-outline-light btn-lg px-5 py-3 fw-semibold">
-                <i class="bi bi-house-add me-2"></i> Offer a Room
-              </a>
-            </div>
-          </div>
-          <div class="col-lg-5 d-none d-lg-block">
-            <div class="hero-image-container">
-              <div class="hero-image-box shadow-lg"></div>
-            </div>
+  <!-- Hero Section -->
+  <section class="hero d-flex align-items-center text-white text-center text-md-start">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h1 class="display-4 fw-bold mb-3">
+            Find Your <span class="text-warning">Ideal Room</span> & <span class="text-warning">Roommate</span>
+          </h1>
+          <!-- updated subheadline -->
+          <p class="lead mb-4">
+            Live with someone who teaches guitar while you practice French 🎸🗣️
+          </p>
+          <!-- responsive CTAs with icons -->
+          <div class="d-flex flex-column flex-sm-row gap-3">
+            <a routerLink="/register" class="btn btn-warning btn-lg d-flex align-items-center justify-content-center">
+              <i class="bi bi-search me-2"></i> Find a Room
+            </a>
+            <a routerLink="/register" class="btn btn-outline-light btn-lg d-flex align-items-center justify-content-center">
+              <i class="bi bi-house-door me-2"></i> Offer a Room
+            </a>
           </div>
         </div>
+        <div class="col-md-6 text-center d-none d-md-block">
+          <!-- swapped to a more engaging SVG -->
+          <img src="assets/hero-people.svg" alt="People matching" class="img-fluid" />
+        </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <!-- How It Works Section - More professional with better icons and cards -->
-    <section id="how-it-works" class="py-5 bg-light">
-      <div class="container py-4">
-        <div class="row justify-content-center mb-5">
-          <div class="col-md-8 text-center">
-            <h6 class="text-primary fw-bold text-uppercase mb-3">Our Process</h6>
-            <h2 class="fw-bold mb-4">How Roomie Works</h2>
-            <div class="divider-center mb-4"></div>
-            <p class="text-muted lead">Our simple three-step process helps you find the perfect match based on compatible skills and preferences.</p>
+  <!-- How It Works Section -->
+  <section id="how-it-works" class="py-5 bg-light">
+    <div class="container">
+      <div class="text-center mb-5">
+        <h6 class="text-primary fw-bold text-uppercase">Our Process</h6>
+        <h2 class="fw-bold">How RentMate Works</h2>
+        <p class="lead text-muted">Get matched based on shared goals, interests, and complementary skills.</p>
+      </div>
+      <div class="row text-center g-4">
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm p-4 hover-shadow">
+            <!-- animated number -->
+            <div class="step-number display-4 text-primary mb-3" data-aos="fade-up">1</div>
+            <div class="icon mb-3 bg-primary bg-opacity-10 p-3 rounded-circle">
+              <i class="bi bi-person-plus fs-3 text-primary"></i>
+            </div>
+            <h4>Create Profile</h4>
+            <p class="text-muted">Add your city, lifestyle preferences, and skills.</p>
           </div>
         </div>
-        
-        <div class="row text-center g-4">
-          <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body p-4">
-                <div class="feature-icon-box bg-primary bg-opacity-10 mb-4">
-                  <i class="bi bi-person-plus text-primary"></i>
-                </div>
-                <h4 class="card-title">Create Your Profile</h4>
-                <p class="card-text text-muted">Define your skills, interests, and what you're looking to learn from potential roommates.</p>
-                <div class="step-number">1</div>
-              </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm p-4 hover-shadow">
+            <div class="step-number display-4 text-success mb-3" data-aos="fade-up" data-aos-delay="100">2</div>
+            <div class="icon mb-3 bg-success bg-opacity-10 p-3 rounded-circle">
+              <i class="bi bi-arrow-left-right fs-3 text-success"></i>
             </div>
+            <h4>Swipe & Match</h4>
+            <p class="text-muted">Discover compatible roommates and mutual interests.</p>
           </div>
-          
-          <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body p-4">
-                <div class="feature-icon-box bg-success bg-opacity-10 mb-4">
-                  <i class="bi bi-arrow-left-right text-success"></i>
-                </div>
-                <h4 class="card-title">Swipe & Match</h4>
-                <p class="card-text text-muted">Browse profiles and swipe right on potential roommates with compatible skills and interests.</p>
-                <div class="step-number">2</div>
-              </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm p-4 hover-shadow">
+            <div class="step-number display-4 text-warning mb-3" data-aos="fade-up" data-aos-delay="200">3</div>
+            <div class="icon mb-3 bg-warning bg-opacity-10 p-3 rounded-circle">
+              <i class="bi bi-calendar-check fs-3 text-warning"></i>
             </div>
-          </div>
-          
-          <div class="col-md-4">
-            <div class="card border-0 shadow-sm h-100">
-              <div class="card-body p-4">
-                <div class="feature-icon-box bg-warning bg-opacity-10 mb-4">
-                  <i class="bi bi-calendar-check text-warning"></i>
-                </div>
-                <h4 class="card-title">Schedule Visits</h4>
-                <p class="card-text text-muted">Request property viewings that sync directly with your calendar for a seamless experience.</p>
-                <div class="step-number">3</div>
-              </div>
-            </div>
+            <h4>Schedule Visits</h4>
+            <p class="text-muted">Book viewings and sync with your calendar.</p>
           </div>
         </div>
       </div>
-    </section>
+      <!-- mini CTA -->
+      <div class="text-center mt-4">
+        <a routerLink="/register" class="btn btn-primary btn-lg">
+          Create a profile and start matching today →
+        </a>
+      </div>
+    </div>
+  </section>
 
-    <!-- Roles Explanation -->
-    <section class="py-5 bg-light">
-      <div class="container">
-        <h2 class="text-center mb-5">Choose Your Role</h2>
-        <div class="row">
-          <div class="col-md-4 mb-4">
-            <div class="card h-100 border-primary">
-              <div class="card-header bg-primary text-white text-center">
-                <h3>Owner 🏠</h3>
-              </div>
-              <div class="card-body">
-                <ul class="list-unstyled">
-                  <li class="mb-2">✅ Create property listings</li>
-                  <li class="mb-2">✅ Set rent prices & rules</li>
-                  <li class="mb-2">✅ Accept or decline visit requests</li>
-                  <li class="mb-2">✅ Browse renter profiles</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4 mb-4">
-            <div class="card h-100 border-info">
-              <div class="card-header bg-info text-white text-center">
-                <h3>Roommate-Host 👥</h3>
-              </div>
-              <div class="card-body">
-                <ul class="list-unstyled">
-                  <li class="mb-2">✅ Create shared living listings</li>
-                  <li class="mb-2">✅ Specify skills you can teach</li>
-                  <li class="mb-2">✅ Match with compatible renters</li>
-                  <li class="mb-2">✅ Schedule video calls with matches</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-4 mb-4">
-            <div class="card h-100 border-success">
-              <div class="card-header bg-success text-white text-center">
-                <h3>Renter 🧍‍♂️</h3>
-              </div>
-              <div class="card-body">
-                <ul class="list-unstyled">
-                  <li class="mb-2">✅ Specify skills you offer</li>
-                  <li class="mb-2">✅ Set skills you want to learn</li>
-                  <li class="mb-2">✅ Swipe right/left on profiles</li>
-                  <li class="mb-2">✅ Request property visits</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-5 mt-auto">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-3">
+          <h5>For Renters</h5>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white">Find Rooms</a></li>
+            <li><a href="#" class="text-white">How It Works</a></li>
+          </ul>
         </div>
-        <div class="text-center mt-4">
-          <p class="lead">You can change your role anytime after signing up!</p>
+        <div class="col-md-3">
+          <h5>For Owners</h5>
+          <ul class="list-unstyled">
+            <li><a href="#" class="text-white">List a Room</a></li>
+            <li><a href="#" class="text-white">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h5>Newsletter</h5>
+          <form class="d-flex" (submit)="$event.preventDefault()">
+            <input type="email" class="form-control me-2" placeholder="Your email" />
+            <button class="btn btn-warning">Subscribe</button>
+          </form>
         </div>
       </div>
-    </section>
-
-    <!-- Featured Listings -->
-    <section id="features" class="py-5">
-      <div class="container">
-        <h2 class="text-center mb-4">Featured Listings</h2>
-        <div class="row">
-          <div class="col-md-4 mb-4" *ngFor="let listing of [1,2,3]">
-            <div class="card h-100 shadow-sm">
-              <div class="position-relative">
-                <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80"
-                     class="card-img-top" alt="Room">
-                <span class="position-absolute top-0 end-0 badge bg-primary m-2">$800/mo</span>
-              </div>
-              <div class="card-body">
-                <h5 class="card-title">Cozy Room in Downtown</h5>
-                <div class="d-flex align-items-center mb-3">
-                  <span class="badge bg-light text-dark me-2">Piano</span>
-                  <span class="badge bg-light text-dark">French</span>
-                </div>
-                <p class="card-text">A bright room with private bathroom. Host offers piano and French lessons.</p>
-              </div>
-              <div class="card-footer bg-white">
-                <div class="d-flex justify-content-between align-items-center">
-                  <small class="text-muted">Owner: Jane D.</small>
-                  <a routerLink="/listing/1" class="btn btn-sm btn-primary">View Details</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="text-center mt-3">
+        <small class="text-muted">&copy; 2025 RentMate. All rights reserved.</small>
       </div>
-    </section>
-
-    <!-- Skills Match -->
-    <section class="py-5 bg-light">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-6 mb-4 mb-lg-0">
-            <h2>Skill-Based Matching</h2>
-            <p class="lead">Our unique matching algorithm connects renters and hosts based on complementary skills.</p>
-            <div class="d-flex mb-3 align-items-center">
-              <div class="p-2 bg-info bg-opacity-10 rounded-circle me-3">
-                <span class="fs-4">🎸</span>
-              </div>
-              <div>
-                <h5 class="mb-0">Learn Guitar</h5>
-                <p class="mb-0 text-muted">Match with hosts who can teach you</p>
-              </div>
-            </div>
-            <div class="d-flex mb-3 align-items-center">
-              <div class="p-2 bg-warning bg-opacity-10 rounded-circle me-3">
-                <span class="fs-4">🧑‍🍳</span>
-              </div>
-              <div>
-                <h5 class="mb-0">Share Cooking Skills</h5>
-                <p class="mb-0 text-muted">Offer your culinary expertise</p>
-              </div>
-            </div>
-            <div class="d-flex mb-3 align-items-center">
-              <div class="p-2 bg-success bg-opacity-10 rounded-circle me-3">
-                <span class="fs-4">💻</span>
-              </div>
-              <div>
-                <h5 class="mb-0">Tech Support</h5>
-                <p class="mb-0 text-muted">Help with computer problems</p>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-6">
-            <div class="card border-0 shadow">
-              <div class="card-body p-4">
-                <div class="text-center mb-4">
-                  <span class="display-1">👥</span>
-                  <h4 class="mt-3">Swipe to Match</h4>
-                  <p>Find roommates with complementary skills</p>
-                </div>
-                <div class="d-grid">
-                  <a routerLink="/register" class="btn btn-primary">Start Matching Today</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Map & Location -->
-    <section class="py-5">
-      <div class="container">
-        <h2 class="text-center mb-5">Find Roommates Near You</h2>
-        <div class="row align-items-center">
-          <div class="col-lg-6 order-lg-2 mb-4 mb-lg-0">
-            <div class="bg-secondary bg-opacity-10 p-3 rounded text-center py-5">
-              <span class="display-1">🗺️</span>
-              <h4 class="mt-3">Interactive Map</h4>
-              <p>Browse homes and roommates by location</p>
-            </div>
-          </div>
-          <div class="col-lg-6 order-lg-1">
-            <h3>Map & Geolocation Features</h3>
-            <ul class="list-group list-group-flush mb-4">
-              <li class="list-group-item bg-transparent">
-                <i class="bi bi-geo-alt text-primary me-2"></i> Share your location to find nearby listings
-              </li>
-              <li class="list-group-item bg-transparent">
-                <i class="bi bi-map text-primary me-2"></i> Browse homes or roommates on an interactive map
-              </li>
-              <li class="list-group-item bg-transparent">
-                <i class="bi bi-sliders text-primary me-2"></i> Adjust search radius to your preference
-              </li>
-            </ul>
-            <div class="d-grid">
-              <a routerLink="/map" class="btn btn-outline-primary">Explore the Map</a>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <footer class="bg-dark text-white py-4">
-      <div class="container">
-        <div class="row">
-          <div class="col-md-4 mb-4 mb-md-0">
-            <h5>Roomie</h5>
-            <p class="text-muted">Find your perfect room and skill-sharing match.</p>
-          </div>
-          <div class="col-md-2 mb-3 mb-md-0">
-            <h6>Company</h6>
-            <ul class="list-unstyled">
-              <li><a href="#" class="text-decoration-none text-muted">About</a></li>
-              <li><a href="#" class="text-decoration-none text-muted">Careers</a></li>
-            </ul>
-          </div>
-          <div class="col-md-2 mb-3 mb-md-0">
-            <h6>Support</h6>
-            <ul class="list-unstyled">
-              <li><a href="#" class="text-decoration-none text-muted">Help Center</a></li>
-              <li><a href="#" class="text-decoration-none text-muted">Safety</a></li>
-            </ul>
-          </div>
-          <div class="col-md-4">
-            <h6>Connect With Us</h6>
-            <div class="d-flex gap-3">
-              <a href="#" class="text-decoration-none text-muted fs-5">📱</a>
-              <a href="#" class="text-decoration-none text-muted fs-5">💻</a>
-              <a href="#" class="text-decoration-none text-muted fs-5">📧</a>
-            </div>
-          </div>
-        </div>
-        <hr class="my-4 border-secondary">
-        <div class="text-center">
-          <p class="mb-0 text-muted">&copy; 2025 Roomie. All rights reserved.</p>
-        </div>
-      </div>
-    </footer>
-  </main>
+    </div>
+  </footer>
 </div>
+
