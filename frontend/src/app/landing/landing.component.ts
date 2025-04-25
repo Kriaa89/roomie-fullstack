@@ -1,34 +1,22 @@
-import { Component, OnInit, HostListener } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ApiService } from '../api.service';
 
 @Component({
-  standalone: true,
   selector: 'app-landing',
-  imports: [RouterLink, CommonModule],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.css']
 })
-export class LandingComponent implements OnInit {
-  welcomeMessage?: string;
+export class LandingComponent {
+  constructor(private router: Router) {}
 
-  // 1) dynamic login/avatar
-  isLoggedIn = false;
-  userAvatarUrl = 'assets/avatar-placeholder.png';
-
-  // 2) scroll shadow
-  scrolled = false;
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    this.scrolled = window.pageYOffset > 20;
+  navigateToRegister() {
+    this.router.navigate(['/auth'], { queryParams: { mode: 'register' } });
   }
 
-  constructor(private api: ApiService) {}
-
-  ngOnInit() {
-    this.api.getLanding().subscribe((res: string) => {
-      this.welcomeMessage = res;
-    });
+  navigateToLogin() {
+    this.router.navigate(['/auth'], { queryParams: { mode: 'login' } });
   }
 }

@@ -17,4 +17,5 @@ public class RegisterRequest {
     private String passwordConfirmation;
     private String phoneNumber;
     private String location;
+    private Integer age;
 }

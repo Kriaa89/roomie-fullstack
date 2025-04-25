@@ -186,7 +186,8 @@ Additionally, owners can define the type of tenant they’re looking for (e.g., 
   "password": "securePassword123",
   "passwordConfirmation": "securePassword123",
   "phoneNumber": "1234567890",
-  "location": "New York"
+  "location": "New York",
+  "age": 25
 }
 ```
 

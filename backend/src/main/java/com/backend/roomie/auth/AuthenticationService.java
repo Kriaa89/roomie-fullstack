@@ -41,6 +41,7 @@ public AuthenticationResponse register(RegisterRequest request) {
             .passwordConfirmation(passwordEncoder.encode(request.getPasswordConfirmation()))
             .phoneNumber(request.getPhoneNumber())
             .location(request.getLocation())
+            .age(request.getAge())
             .emailVerified(false)
             .phoneVerified(false)
             .idVerified(false)
@@ -54,9 +55,11 @@ public AuthenticationResponse register(RegisterRequest request) {
     // Generate JWT token
     String token = jwtService.generateToken(user);
 
-    // Return authentication response with token
+    // Return authentication response with token, user ID, and isNewUser flag
     return AuthenticationResponse.builder()
             .token(token)
+            .userId(user.getId())
+            .isNewUser(true)
             .build();
 }
 
@@ -78,6 +81,8 @@ public AuthenticationResponse authenticate(AuthenticationRequest request) {
         String token = jwtService.generateToken(user);
         return AuthenticationResponse.builder()
                 .token(token)
+                .userId(user.getId())
+                .isNewUser(false)
                 .build();
     } catch (Exception e) {
         throw new IllegalArgumentException("Invalid credentials");
