@@ -57,6 +57,23 @@ h2 {
   box-shadow: 0 5px 15px rgba(74, 144, 226, 0.1);
 }
 
+.role-card.already-assigned {
+  border-color: #28a745;
+  position: relative;
+}
+
+.role-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #28a745;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .role-icon {
   font-size: 36px;
   margin-bottom: 15px;

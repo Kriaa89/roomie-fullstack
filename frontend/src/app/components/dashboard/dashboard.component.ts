@@ -42,16 +42,21 @@ export class DashboardComponent implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.user = user;
-        // Load appropriate properties based on user roles
+
+        // Redirect to role-specific dashboard
         if (this.hasRole('OWNER')) {
-          this.loadMyProperties();
-          this.activeTab = 'my'; // Default to my properties for owners
+          this.router.navigate(['/owner-dashboard']);
+          return;
         } else if (this.hasRole('RENTER')) {
-          this.loadAvailableProperties();
-          this.activeTab = 'available'; // Default to available properties for renters
-        } else {
-          this.loadAllProperties();
+          this.router.navigate(['/renter-dashboard']);
+          return;
+        } else if (this.hasRole('ROOMMATE_HOST')) {
+          this.router.navigate(['/roommate-host-dashboard']);
+          return;
         }
+
+        // If no specific role or multiple roles, load all properties
+        this.loadAllProperties();
       } else {
         this.router.navigate(['/login']);
       }

@@ -34,12 +34,10 @@ export class RoleSelectionComponent implements OnInit {
         this.userId = user.id;
         this.currentRoles = user.roles || [];
 
-        // Filter out roles the user already has
-        this.availableRoles = this.availableRoles.filter(role =>
-          !this.currentRoles.includes(role.type)
-        );
+        // No longer filtering out roles the user already has
+        // Show all roles regardless of whether the user has them or not
 
-        // If no roles available, redirect to dashboard
+        // Only redirect to dashboard if there are truly no roles available
         if (this.availableRoles.length === 0) {
           this.router.navigate(['/dashboard']);
         }
@@ -51,6 +49,13 @@ export class RoleSelectionComponent implements OnInit {
   }
 
   selectRole(roleType: string): void {
+    // Check if user already has this role
+    if (this.currentRoles.includes(roleType)) {
+      this.errorMessage = 'You already have this role assigned to your account.';
+      return;
+    }
+
+    this.errorMessage = ''; // Clear any previous error messages
     this.selectedRole = roleType;
   }
 

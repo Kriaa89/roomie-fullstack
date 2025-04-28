@@ -1,0 +1,87 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="logo">
+      <h1>Roomie - Owner Dashboard</h1>
+    </div>
+    <div class="user-info" *ngIf="user">
+      <span>Welcome, {{ user.firstName }} {{ user.lastName }}</span>
+      <button class="btn btn-outline" (click)="logout()">Logout</button>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+    <div class="sidebar">
+      <div class="user-roles" *ngIf="user && user.roles">
+        <h3>Your Roles</h3>
+        <ul class="roles-list">
+          <li *ngFor="let role of user.roles" class="role-badge">{{ role }}</li>
+        </ul>
+      </div>
+
+      <nav class="dashboard-nav">
+        <h3>Navigation</h3>
+        <ul>
+          <li><a routerLink="/owner-dashboard" class="active">Owner Dashboard</a></li>
+          <li><a routerLink="/my-properties">My Properties</a></li>
+          <li><a routerLink="/profile">My Profile</a></li>
+        </ul>
+      </nav>
+    </div>
+
+    <main class="main-content">
+      <div class="actions-bar">
+        <h2>My Properties</h2>
+        <div class="actions">
+          <button class="btn btn-primary" (click)="createProperty()">
+            <i class="fas fa-plus"></i> Add Property
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading properties...</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="!isLoading && myProperties.length === 0" class="no-data">
+        <p>You haven't added any properties yet.</p>
+        <button class="btn btn-primary" (click)="createProperty()">
+          Add Your First Property
+        </button>
+      </div>
+
+      <div *ngIf="!isLoading && myProperties.length > 0" class="properties-grid">
+        <div *ngFor="let property of myProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
+          <div class="property-image">
+            <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
+            <div class="property-badge" [ngClass]="{'available': property.availability, 'unavailable': !property.availability}">
+              {{ property.availability ? 'Available' : 'Not Available' }}
+            </div>
+          </div>
+          <div class="property-details">
+            <h3>{{ property.name }}</h3>
+            <p class="property-location">
+              <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+            </p>
+            <p class="property-price">{{ property.price }}</p>
+            <div class="property-info">
+              <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
+              <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
+              <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
+            </div>
+            <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
+            <div class="property-actions">
+              <button class="btn btn-sm btn-primary" (click)="property.id && editProperty(property.id, $event)">
+                <i class="fas fa-edit"></i> Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
