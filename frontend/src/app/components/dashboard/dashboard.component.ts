@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { ApiService } from '../../services/api.service';
+import { PropertyService } from '../../services/property.service';
+import { Property } from '../../models/property.model';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -13,13 +14,13 @@ import { CommonModule } from '@angular/common';
 })
 export class DashboardComponent implements OnInit {
   user: any = null;
-  properties: any[] = [];
+  properties: Property[] = [];
   isLoading: boolean = false;
   errorMessage: string = '';
 
   constructor(
     private authService: AuthService,
-    private apiService: ApiService,
+    private propertyService: PropertyService,
     private router: Router
   ) {}
 
@@ -42,7 +43,7 @@ export class DashboardComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.apiService.getAllProperties().subscribe({
+    this.propertyService.getAllProperties().subscribe({
       next: (data) => {
         this.properties = data;
         this.isLoading = false;

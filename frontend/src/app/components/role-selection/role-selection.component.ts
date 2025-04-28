@@ -79,4 +79,9 @@ export class RoleSelectionComponent implements OnInit {
       }
     });
   }
+
+  logout(): void {
+    this.authService.logout();
+    // The logout method in AuthService already handles navigation to login page
+  }
 }

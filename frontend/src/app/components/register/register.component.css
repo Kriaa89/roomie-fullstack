@@ -144,3 +144,20 @@ label {
 .login-link a:hover {
   text-decoration: underline;
 }
+
+.back-link {
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
+.back-link a {
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back-link a:hover {
+  text-decoration: underline;
+}

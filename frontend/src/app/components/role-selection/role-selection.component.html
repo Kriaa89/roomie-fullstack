@@ -37,6 +37,14 @@
         <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
         {{ isLoading ? 'Processing...' : 'Confirm Selection' }}
       </button>
+
+      <button
+        class="btn btn-outline"
+        [disabled]="isLoading"
+        (click)="logout()"
+      >
+        Logout
+      </button>
     </div>
   </div>
 </div>
