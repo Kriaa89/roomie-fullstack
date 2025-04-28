@@ -32,13 +32,34 @@
 
     <main class="main-content">
       <div class="actions-bar">
-        <h2>Properties</h2>
+        <div class="tabs">
+          <button
+            class="tab-btn"
+            [class.active]="activeTab === 'all'"
+            (click)="setActiveTab('all')"
+          >
+            All Properties
+          </button>
+          <button
+            *ngIf="hasRole('OWNER')"
+            class="tab-btn"
+            [class.active]="activeTab === 'my'"
+            (click)="setActiveTab('my')"
+          >
+            My Properties
+          </button>
+          <button
+            *ngIf="hasRole('RENTER')"
+            class="tab-btn"
+            [class.active]="activeTab === 'available'"
+            (click)="setActiveTab('available')"
+          >
+            Available Properties
+          </button>
+        </div>
         <div class="actions">
           <button *ngIf="hasRole('OWNER')" class="btn btn-primary" (click)="createProperty()">
             <i class="fas fa-plus"></i> Add Property
-          </button>
-          <button *ngIf="hasRole('OWNER')" class="btn btn-secondary" (click)="viewMyProperties()">
-            <i class="fas fa-list"></i> My Properties
           </button>
         </div>
       </div>
@@ -52,31 +73,102 @@
         {{ errorMessage }}
       </div>
 
-      <div *ngIf="!isLoading && properties.length === 0" class="no-data">
-        <p>No properties available at the moment.</p>
-        <button *ngIf="hasRole('OWNER')" class="btn btn-primary" (click)="createProperty()">
-          Add Your First Property
-        </button>
+      <!-- All Properties Tab -->
+      <div *ngIf="activeTab === 'all'">
+        <div *ngIf="!isLoading && properties.length === 0" class="no-data">
+          <p>No properties available at the moment.</p>
+          <button *ngIf="hasRole('OWNER')" class="btn btn-primary" (click)="createProperty()">
+            Add Your First Property
+          </button>
+        </div>
+
+        <div *ngIf="!isLoading && properties.length > 0" class="properties-grid">
+          <div *ngFor="let property of properties" class="property-card" (click)="property.id && viewProperty(property.id)">
+            <div class="property-image">
+              <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
+              <div class="property-badge" *ngIf="property.availability">Available</div>
+            </div>
+            <div class="property-details">
+              <h3>{{ property.name }}</h3>
+              <p class="property-location">
+                <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+              </p>
+              <p class="property-price">{{ property.price }}</p>
+              <div class="property-info">
+                <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
+                <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
+                <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
+              </div>
+              <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div *ngIf="!isLoading && properties.length > 0" class="properties-grid">
-        <div *ngFor="let property of properties" class="property-card" (click)="viewProperty(property.id)">
-          <div class="property-image">
-            <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
-            <div class="property-badge" *ngIf="property.availability">Available</div>
-          </div>
-          <div class="property-details">
-            <h3>{{ property.name }}</h3>
-            <p class="property-location">
-              <i class="fas fa-map-marker-alt"></i> {{ property.location }}
-            </p>
-            <p class="property-price">{{ property.price }}</p>
-            <div class="property-info">
-              <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
-              <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
-              <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
+      <!-- My Properties Tab (for Owners) -->
+      <div *ngIf="activeTab === 'my' && hasRole('OWNER')">
+        <div *ngIf="!isLoading && myProperties.length === 0" class="no-data">
+          <p>You haven't added any properties yet.</p>
+          <button class="btn btn-primary" (click)="createProperty()">
+            Add Your First Property
+          </button>
+        </div>
+
+        <div *ngIf="!isLoading && myProperties.length > 0" class="properties-grid">
+          <div *ngFor="let property of myProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
+            <div class="property-image">
+              <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
+              <div class="property-badge" [ngClass]="{'available': property.availability, 'unavailable': !property.availability}">
+                {{ property.availability ? 'Available' : 'Not Available' }}
+              </div>
             </div>
-            <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
+            <div class="property-details">
+              <h3>{{ property.name }}</h3>
+              <p class="property-location">
+                <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+              </p>
+              <p class="property-price">{{ property.price }}</p>
+              <div class="property-info">
+                <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
+                <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
+                <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
+              </div>
+              <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
+              <div class="property-actions">
+                <button class="btn btn-sm btn-primary" (click)="property.id && editProperty(property.id, $event)">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Properties Tab (for Renters) -->
+      <div *ngIf="activeTab === 'available' && hasRole('RENTER')">
+        <div *ngIf="!isLoading && availableProperties.length === 0" class="no-data">
+          <p>No available properties at the moment.</p>
+        </div>
+
+        <div *ngIf="!isLoading && availableProperties.length > 0" class="properties-grid">
+          <div *ngFor="let property of availableProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
+            <div class="property-image">
+              <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
+              <div class="property-badge available">Available</div>
+            </div>
+            <div class="property-details">
+              <h3>{{ property.name }}</h3>
+              <p class="property-location">
+                <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+              </p>
+              <p class="property-price">{{ property.price }}</p>
+              <div class="property-info">
+                <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
+                <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
+                <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
+              </div>
+              <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
+            </div>
           </div>
         </div>
       </div>

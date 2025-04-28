@@ -165,15 +165,49 @@
       <h3>Additional Information</h3>
 
       <div class="form-group">
-        <label for="images">Images (comma-separated URLs)</label>
+        <label>Property Images</label>
+        <div class="image-upload-container">
+          <input
+            #fileInput
+            type="file"
+            accept="image/*"
+            multiple
+            class="file-input"
+            (change)="onFileSelected($event)"
+            style="display: none;"
+          >
+          <button
+            type="button"
+            class="btn btn-outline upload-btn"
+            (click)="triggerFileInput()"
+          >
+            <i class="fas fa-cloud-upload-alt"></i> Upload Photos
+          </button>
+          <small class="form-text text-muted">Select multiple images to upload (jpg, jpeg, png, gif)</small>
+        </div>
+
+        <!-- Image previews -->
+        <div *ngIf="previewUrls.length > 0" class="image-previews">
+          <div *ngFor="let url of previewUrls; let i = index" class="image-preview-item">
+            <img [src]="url" alt="Preview">
+            <button type="button" class="remove-btn" (click)="removeFile(i)">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Upload progress -->
+        <div *ngIf="uploadProgress > 0 && uploadProgress < 100" class="upload-progress">
+          <div class="progress-bar" [style.width.%]="uploadProgress"></div>
+          <span>{{ uploadProgress }}%</span>
+        </div>
+
+        <!-- Hidden input for existing images -->
         <input
-          type="text"
+          type="hidden"
           id="images"
           formControlName="images"
-          class="form-control"
-          placeholder="Enter image URLs separated by commas"
         >
-        <small class="form-text text-muted">Example: https://example.com/image1.jpg, https://example.com/image2.jpg</small>
       </div>
 
       <div class="form-group">

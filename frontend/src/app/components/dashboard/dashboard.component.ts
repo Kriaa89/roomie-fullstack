@@ -15,8 +15,11 @@ import { CommonModule } from '@angular/common';
 export class DashboardComponent implements OnInit {
   user: any = null;
   properties: Property[] = [];
+  myProperties: Property[] = [];
+  availableProperties: Property[] = [];
   isLoading: boolean = false;
   errorMessage: string = '';
+  activeTab: string = 'all'; // Default tab
 
   constructor(
     private authService: AuthService,
@@ -26,20 +29,29 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadUserData();
-    this.loadProperties();
   }
 
   loadUserData(): void {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.user = user;
+        // Load appropriate properties based on user roles
+        if (this.hasRole('OWNER')) {
+          this.loadMyProperties();
+          this.activeTab = 'my'; // Default to my properties for owners
+        } else if (this.hasRole('RENTER')) {
+          this.loadAvailableProperties();
+          this.activeTab = 'available'; // Default to available properties for renters
+        } else {
+          this.loadAllProperties();
+        }
       } else {
         this.router.navigate(['/login']);
       }
     });
   }
 
-  loadProperties(): void {
+  loadAllProperties(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
@@ -54,6 +66,53 @@ export class DashboardComponent implements OnInit {
         console.error('Error loading properties:', error);
       }
     });
+  }
+
+  loadMyProperties(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.propertyService.getMyProperties().subscribe({
+      next: (data) => {
+        this.myProperties = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = 'Failed to load your properties. Please try again.';
+        console.error('Error loading properties:', error);
+      }
+    });
+  }
+
+  loadAvailableProperties(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.propertyService.getAvailableProperties().subscribe({
+      next: (data) => {
+        this.availableProperties = data;
+        this.isLoading = false;
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = 'Failed to load available properties. Please try again.';
+        console.error('Error loading properties:', error);
+      }
+    });
+  }
+
+  setActiveTab(tab: string): void {
+    this.activeTab = tab;
+
+    // Load data for the selected tab if not already loaded
+    if (tab === 'all' && this.properties.length === 0) {
+      this.loadAllProperties();
+    } else if (tab === 'my' && this.myProperties.length === 0 && this.hasRole('OWNER')) {
+      this.loadMyProperties();
+    } else if (tab === 'available' && this.availableProperties.length === 0) {
+      this.loadAvailableProperties();
+    }
   }
 
   logout(): void {
@@ -73,6 +132,12 @@ export class DashboardComponent implements OnInit {
   // Navigate to create property page
   createProperty(): void {
     this.router.navigate(['/properties/create']);
+  }
+
+  // Navigate to edit property page
+  editProperty(propertyId: number, event: Event): void {
+    event.stopPropagation(); // Prevent the card click event from firing
+    this.router.navigate(['/properties/edit', propertyId]);
   }
 
   // Navigate to my properties page (for owners)

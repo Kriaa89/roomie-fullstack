@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -14,12 +14,18 @@ import { Property, PropertyType } from '../../../models/property.model';
   styleUrls: ['./property-form.component.css']
 })
 export class PropertyFormComponent implements OnInit {
+  @ViewChild('fileInput') fileInput!: ElementRef;
+
   propertyForm: FormGroup;
   propertyId: number | null = null;
   isEditMode: boolean = false;
   isLoading: boolean = false;
   errorMessage: string = '';
   propertyTypes = Object.values(PropertyType);
+
+  selectedFiles: File[] = [];
+  previewUrls: string[] = [];
+  uploadProgress: number = 0;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -85,6 +91,16 @@ export class PropertyFormComponent implements OnInit {
           availability: property.availability,
           audiance: property.audiance
         });
+
+        // Load existing images for preview
+        if (property.images) {
+          const imageUrls = property.images.split(',');
+          this.previewUrls = imageUrls;
+
+          // For demonstration purposes, we're not actually loading the files
+          // In a real application, you would need to fetch the files from the server
+          // or create File objects from the URLs if possible
+        }
       },
       error: (error) => {
         this.isLoading = false;
@@ -94,7 +110,7 @@ export class PropertyFormComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.propertyForm.invalid) {
       // Mark all fields as touched to trigger validation messages
       Object.keys(this.propertyForm.controls).forEach(key => {
@@ -107,10 +123,27 @@ export class PropertyFormComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    if (this.isEditMode && this.propertyId) {
-      this.updateProperty();
-    } else {
-      this.createProperty();
+    try {
+      // Upload files and get URLs
+      const uploadedUrls = await this.uploadFiles();
+
+      // Update the form value with the uploaded image URLs
+      if (uploadedUrls.length > 0) {
+        this.propertyForm.patchValue({
+          images: uploadedUrls.join(',')
+        });
+      }
+
+      // Submit the form
+      if (this.isEditMode && this.propertyId) {
+        this.updateProperty();
+      } else {
+        this.createProperty();
+      }
+    } catch (error) {
+      this.isLoading = false;
+      this.errorMessage = 'Failed to upload images. Please try again.';
+      console.error('Error uploading images:', error);
     }
   }
 
@@ -158,5 +191,75 @@ export class PropertyFormComponent implements OnInit {
     } else {
       this.router.navigate(['/dashboard']);
     }
+  }
+
+  // File handling methods
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files) {
+      // Clear previous selections
+      this.selectedFiles = [];
+      this.previewUrls = [];
+
+      // Add new files
+      for (let i = 0; i < input.files.length; i++) {
+        const file = input.files[i];
+        if (this.isValidImageFile(file)) {
+          this.selectedFiles.push(file);
+          this.createImagePreview(file);
+        } else {
+          this.errorMessage = 'Please select valid image files (jpg, jpeg, png, gif)';
+        }
+      }
+    }
+  }
+
+  isValidImageFile(file: File): boolean {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    return validTypes.includes(file.type);
+  }
+
+  createImagePreview(file: File): void {
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.previewUrls.push(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeFile(index: number): void {
+    this.selectedFiles.splice(index, 1);
+    this.previewUrls.splice(index, 1);
+  }
+
+  triggerFileInput(): void {
+    this.fileInput.nativeElement.click();
+  }
+
+  // This method will be called before form submission to handle file uploads
+  async uploadFiles(): Promise<string[]> {
+    if (this.selectedFiles.length === 0) {
+      // If no new files selected, return the existing images
+      return this.propertyForm.get('images')?.value ?
+        this.propertyForm.get('images')?.value.split(',') : [];
+    }
+
+    const uploadedUrls: string[] = [];
+
+    // In a real application, you would upload each file to a server
+    // For this example, we'll simulate the upload and return data URLs
+    for (let i = 0; i < this.selectedFiles.length; i++) {
+      // Simulate upload progress
+      this.uploadProgress = Math.round(((i + 1) / this.selectedFiles.length) * 100);
+
+      // In a real app, you would call a service to upload the file
+      // For now, we'll just use the preview URLs
+      uploadedUrls.push(this.previewUrls[i]);
+
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    return uploadedUrls;
   }
 }
