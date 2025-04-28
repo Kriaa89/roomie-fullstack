@@ -1,21 +1,31 @@
 package com.backend.roomie.repositories;
 
-
 import com.backend.roomie.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
-
-public interface UserRepository  extends JpaRepository<User, Long> {
-    // This method retrieves a User from the database by email
+/**
+ * Repository interface for User entity
+ * Provides methods to interact with the users table in the database
+ */
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    
+    /**
+     * Find a user by email
+     * 
+     * @param email the email to search for
+     * @return an Optional containing the user if found, or empty if not found
+     */
     Optional<User> findByEmail(String email);
-    // Find users by location
-    List<User> findByLocation(String location);
-    // Find users by phone verification status
-    List<User> findByPhoneVerified(Boolean verified);
-
+    
+    /**
+     * Check if a user with the given email exists
+     * 
+     * @param email the email to check
+     * @return true if a user with the email exists, false otherwise
+     */
+    boolean existsByEmail(String email);
 }

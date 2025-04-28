@@ -2,140 +2,163 @@ package com.backend.roomie.controllers;
 
 import com.backend.roomie.models.PropretyList;
 import com.backend.roomie.services.PropertyService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * Controller for handling property-related HTTP requests
+ * Controller for property operations
  */
 @RestController
 @RequestMapping("/api/properties")
+@RequiredArgsConstructor
 public class PropertyController {
 
-    // Service for property-related operations
     private final PropertyService propertyService;
 
     /**
-     * Constructor with dependency injection
+     * Get all properties
+     * 
+     * @return list of properties
      */
-    @Autowired
-    public PropertyController(PropertyService propertyService) {
-        this.propertyService = propertyService;
+    @GetMapping
+    public ResponseEntity<List<PropretyList>> getAllProperties() {
+        return ResponseEntity.ok(propertyService.getAllProperties());
     }
 
     /**
-     * Create a new property listing
-     * @param userId ID of the user who owns the property
-     * @param property the property details
-     * @return the created property
+     * Get property by ID
+     * 
+     * @param id property ID
+     * @return property
      */
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<?> createProperty(
-            @PathVariable("userId") Long userId,
-            @RequestBody PropretyList property) {
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPropertyById(@PathVariable Long id) {
         try {
-            // Call service to create property
-            PropretyList createdProperty = propertyService.createProperty(userId, property);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdProperty);
-        } catch (Exception e) {
-            // Return error message if creation fails
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    /**
-     * Get all properties for a user
-     * @param userId ID of the user
-     * @return list of properties owned by the user
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getUserProperties(@PathVariable("userId") Long userId) {
-        try {
-            // Call service to get user properties
-            List<PropretyList> properties = propertyService.getUserProperties(userId);
-            return ResponseEntity.ok(properties);
-        } catch (Exception e) {
-            // Return error message if retrieval fails
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    /**
-     * Get a property by ID
-     * @param propertyId ID of the property
-     * @return the property
-     */
-    @GetMapping("/{propertyId}")
-    public ResponseEntity<?> getProperty(@PathVariable("propertyId") Long propertyId) {
-        try {
-            // Call service to get property by ID
-            PropretyList property = propertyService.getPropertyById(propertyId);
+            PropretyList property = propertyService.getPropertyById(id);
             return ResponseEntity.ok(property);
-        } catch (Exception e) {
-            // Return error message if property not found
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
     /**
-     * Update a property
-     * @param propertyId ID of the property to update
-     * @param propertyUpdates the updated property details
-     * @return the updated property
+     * Get properties by owner
+     * 
+     * @param ownerId owner ID
+     * @return list of properties
      */
-    @PutMapping("/{propertyId}")
-    public ResponseEntity<?> updateProperty(
-            @PathVariable("propertyId") Long propertyId,
-            @RequestBody PropretyList propertyUpdates) {
+    @GetMapping("/owner/{ownerId}")
+    public ResponseEntity<?> getPropertiesByOwner(@PathVariable Long ownerId) {
         try {
-            // Call service to update property
-            PropretyList updatedProperty = propertyService.updateProperty(propertyId, propertyUpdates);
+            List<PropretyList> properties = propertyService.getPropertiesByOwner(ownerId);
+            return ResponseEntity.ok(properties);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Get properties by current user
+     * 
+     * @return list of properties
+     */
+    @GetMapping("/my-properties")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<?> getMyProperties() {
+        try {
+            List<PropretyList> properties = propertyService.getPropertiesByCurrentUser();
+            return ResponseEntity.ok(properties);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Get available properties
+     * 
+     * @return list of available properties
+     */
+    @GetMapping("/available")
+    public ResponseEntity<List<PropretyList>> getAvailableProperties() {
+        return ResponseEntity.ok(propertyService.getAvailableProperties());
+    }
+
+    /**
+     * Get properties by type
+     * 
+     * @param type property type
+     * @return list of properties
+     */
+    @GetMapping("/type/{type}")
+    public ResponseEntity<List<PropretyList>> getPropertiesByType(@PathVariable String type) {
+        return ResponseEntity.ok(propertyService.getPropertiesByType(type));
+    }
+
+    /**
+     * Get properties by location
+     * 
+     * @param location property location
+     * @return list of properties
+     */
+    @GetMapping("/location/{location}")
+    public ResponseEntity<List<PropretyList>> getPropertiesByLocation(@PathVariable String location) {
+        return ResponseEntity.ok(propertyService.getPropertiesByLocation(location));
+    }
+
+    /**
+     * Create property
+     * 
+     * @param property property data
+     * @return created property
+     */
+    @PostMapping
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<?> createProperty(@RequestBody PropretyList property) {
+        try {
+            PropretyList createdProperty = propertyService.createProperty(property);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdProperty);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Update property
+     * 
+     * @param id property ID
+     * @param propertyDetails property details
+     * @return updated property
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<?> updateProperty(@PathVariable Long id, @RequestBody Map<String, Object> propertyDetails) {
+        try {
+            PropretyList updatedProperty = propertyService.updateProperty(id, propertyDetails);
             return ResponseEntity.ok(updatedProperty);
-        } catch (Exception e) {
-            // Return error message if update fails
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
     /**
-     * Delete a property
-     * @param propertyId ID of the property to delete
-     * @return success message
+     * Delete property
+     * 
+     * @param id property ID
+     * @return response
      */
-    @DeleteMapping("/{propertyId}")
-    public ResponseEntity<?> deleteProperty(@PathVariable("propertyId") Long propertyId) {
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<?> deleteProperty(@PathVariable Long id) {
         try {
-            // Call service to delete property
-            propertyService.deleteProperty(propertyId);
-            return ResponseEntity.ok(Map.of("message", "Property deleted successfully"));
-        } catch (Exception e) {
-            // Return error message if deletion fails
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-    }
-
-    /**
-     * Upload property image
-     * @param propertyId ID of the property
-     * @param file the image file to upload
-     * @return URL of the uploaded image
-     */
-    @PostMapping("/{propertyId}/image")
-    public ResponseEntity<?> uploadPropertyImage(
-            @PathVariable("propertyId") Long propertyId,
-            @RequestParam("file") MultipartFile file) {
-        try {
-            // Call service to upload property image
-            String imageUrl = propertyService.uploadPropertyImage(propertyId, file);
-            return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
-        } catch (Exception e) {
-            // Return error message if upload fails
+            propertyService.deleteProperty(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }

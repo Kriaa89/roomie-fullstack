@@ -8,16 +8,18 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
- * Configuration class for setting up security-related beans in the application.
- * Provides beans for user details service, authentication provider, authentication manager,
- * and password encoder. It configures how user details are retrieved, how authentication is
- * handled, and how passwords are encoded.
+ * Configuration class for application-wide beans
  */
 @Configuration
 @RequiredArgsConstructor
@@ -26,28 +28,35 @@ public class ApplicationConfig {
     private final UserRepository userRepository;
 
     /**
-     * Creates a UserDetailsService bean that loads user details from the repository.
-     *
+     * UserDetailsService bean for loading user details by username (email)
+     * 
      * @return UserDetailsService implementation
      */
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> {
+            // Find user by email
             com.backend.roomie.models.User user = userRepository.findByEmail(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            return org.springframework.security.core.userdetails.User.builder()
-                    .username(user.getEmail())
-                    .password(user.getPassword())
-                    .roles("USER") // Default role, can be enhanced to use actual roles from UserRole
-                    .build();
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+            
+            // Get user roles from UserRole entities
+            List<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleType().name()))
+                    .collect(Collectors.toList());
+            
+            // Create Spring Security User with username, password, and authorities
+            return new User(
+                    user.getEmail(),
+                    user.getPassword(),
+                    authorities
+            );
         };
     }
 
     /**
-     * Creates an AuthenticationProvider bean that uses the UserDetailsService and PasswordEncoder.
-     *
-     * @return DaoAuthenticationProvider configured with UserDetailsService and PasswordEncoder
+     * AuthenticationProvider bean for authenticating users
+     * 
+     * @return DaoAuthenticationProvider
      */
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -58,11 +67,11 @@ public class ApplicationConfig {
     }
 
     /**
-     * Creates an AuthenticationManager bean from the AuthenticationConfiguration.
-     *
-     * @param config AuthenticationConfiguration to get the AuthenticationManager from
-     * @return AuthenticationManager instance
-     * @throws Exception if there is an error getting the AuthenticationManager
+     * AuthenticationManager bean for authenticating users
+     * 
+     * @param config AuthenticationConfiguration
+     * @return AuthenticationManager
+     * @throws Exception if authentication manager cannot be created
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -70,9 +79,9 @@ public class ApplicationConfig {
     }
 
     /**
-     * Creates a PasswordEncoder bean for encoding and verifying passwords.
-     *
-     * @return BCryptPasswordEncoder instance
+     * PasswordEncoder bean for encoding passwords
+     * 
+     * @return BCryptPasswordEncoder
      */
     @Bean
     public PasswordEncoder passwordEncoder() {

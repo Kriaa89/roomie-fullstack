@@ -2,49 +2,69 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+// Define interfaces for API responses
+interface LoginResponse {
+  token: string;
+  role?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:8080'; // Adjust based on your backend URL
+  private baseUrl = 'http://localhost:8080/auth';
+  private userUrl = 'http://localhost:8080/api/users';
 
   constructor(private http: HttpClient) {}
 
-  // Get HTTP headers with authorization token
-  private getHeaders(): HttpHeaders {
+  register(data: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    const options = {
+      headers: headers
+      // Removed withCredentials: true as it might be causing CORS issues
+    };
+
+    console.log('Sending registration request to:', `${this.baseUrl}/register`);
+    console.log('With data:', data);
+
+    return this.http.post(`${this.baseUrl}/register`, data, options);
+  }
+
+  login(email: string, password: string): Observable<LoginResponse> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    const options = {
+      headers: headers
+      // Removed withCredentials: true for consistency with register method
+    };
+
+    const data = { email, password };
+
+    return this.http.post<LoginResponse>(`${this.baseUrl}/login`, data, options);
+  }
+
+  getAvailableRoles(): Observable<string[]> {
     const token = localStorage.getItem('token');
-    return new HttpHeaders({
+    const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     });
+
+    return this.http.get<string[]>(`${this.userUrl}/roles`, { headers });
   }
 
-  // Register a new user
-  register(userData: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/register`, userData);
-  }
+  assignRole(userId: string, role: string): Observable<any> {
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    });
 
-  // Login a user
-  login(credentials: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/auth/login`, credentials);
-  }
-
-  // Assign a role to a user
-  assignRole(userId: number, roleType: string): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.post(
-      `${this.baseUrl}/api/user-roles/user/${userId}`,
-      { roleType },
-      { headers }
-    );
-  }
-
-  // Get user roles
-  getUserRoles(userId: number): Observable<any> {
-    const headers = this.getHeaders();
-    return this.http.get(
-      `${this.baseUrl}/api/user-roles/user/${userId}`,
-      { headers }
-    );
+    return this.http.post(`${this.userUrl}/${userId}/role`, { role }, { headers });
   }
 }

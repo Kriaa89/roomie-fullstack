@@ -9,49 +9,57 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 /**
- * Configuration class for setting up security-related settings in the application.
- * Configures security filter chain to define access rules, session management, and authentication.
+ * Configuration class for Spring Security
  */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 
-
     /**
-     * Configures security filter chain with custom settings for JWT authentication.
-     *
-     * @param http HttpSecurity object used to configure security settings
-     * @return SecurityFilterChain with custom security configuration
-     * @throws Exception if there is an error during configuration
+     * Configure security filter chain
+     * 
+     * @param http HttpSecurity
+     * @return SecurityFilterChain
+     * @throws Exception if configuration fails
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // Disable CSRF protection for stateless API
             .csrf(AbstractHttpConfigurer::disable)
+            // Configure authorization rules
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/api/users/register").permitAll()
-                .requestMatchers("/api/users/login").permitAll()
-                .requestMatchers("/api/users/landing").permitAll()
-                .requestMatchers("/api/users/roles").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                // Public endpoints that don't require authentication
+                .requestMatchers(
+                    "/auth/**",
+                    "/auth/select-role/**",
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/swagger-ui.html"
+                ).permitAll()
+                // All other endpoints require authentication
                 .anyRequest().authenticated()
             )
+            // Configure session management to be stateless
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+            // Configure authentication provider
             .authenticationProvider(authenticationProvider)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // Add JWT filter before UsernamePasswordAuthenticationFilter
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // Configure CORS
+            .cors(Customizer.withDefaults());
 
         return http.build();
     }

@@ -77,7 +77,7 @@ public class User {
     @NotEmpty(message = "Location is required")
     private String location;
 
-   // - **Account Verification Status** (email verified, phone verified, ID verified)
+    // - **Account Verification Status** (email verified, phone verified, ID verified)
     private Boolean emailVerified = false;
     private Boolean phoneVerified = false;
     private Boolean idVerified = false;
@@ -116,6 +116,10 @@ public class User {
     // Notifications received by this user
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Notification> notifications;
+
+    // User roles
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<UserRole> roles;
 
 
     public Long getId() {
@@ -284,5 +288,13 @@ public class User {
 
     public void setNotifications(List<Notification> notifications) {
         this.notifications = notifications;
+    }
+
+    public List<UserRole> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<UserRole> roles) {
+        this.roles = roles;
     }
 }

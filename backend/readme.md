@@ -23,7 +23,7 @@ Additionally, owners can define the type of tenant they’re looking for (e.g., 
 ## 📝 Product Backlog
 
 ### 🔹 **EPIC 1: User Registration & Authentication**
-- Sign up / Login with email, Google, or Facebook.
+- Sign up / Login 
 - Email verification and password reset.
 - User profile setup with role selection.
 
@@ -186,8 +186,7 @@ Additionally, owners can define the type of tenant they’re looking for (e.g., 
   "password": "securePassword123",
   "passwordConfirmation": "securePassword123",
   "phoneNumber": "1234567890",
-  "location": "New York",
-  "age": 25
+  "location": "New York"
 }
 ```
 
@@ -226,7 +225,44 @@ Additionally, owners can define the type of tenant they’re looking for (e.g., 
 - Body:
 ```json
 {
-  "token": "eyJhbGciOiJIUzI1NiJ9..."
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "userId": 1,
+  "email": "john.doe@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "roles": ["RENTER"]
+}
+```
+
+#### 3. Select Role
+
+**Endpoint:** `POST http://localhost:8080/auth/select-role/{userId}`
+
+**Description:** Adds a role to a user and returns an updated JWT token
+
+**Request:**
+- Method: POST
+- URL: `http://localhost:8080/auth/select-role/1`
+- Headers:
+  - Content-Type: application/json
+- Body (raw JSON):
+```json
+{
+  "roleType": "OWNER"
+}
+```
+
+**Expected Response:**
+- Status: 200 OK
+- Body:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "userId": 1,
+  "email": "john.doe@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "roles": ["RENTER", "OWNER"]
 }
 ```
 
@@ -239,8 +275,296 @@ For any endpoints that require authentication, you'll need to include the JWT to
    - Key: Authorization
    - Value: Bearer eyJhbGciOiJIUzI1NiJ9... (the token you received)
 
+### User Management Endpoints
+
+#### 1. Get Current User
+
+**Endpoint:** `GET http://localhost:8080/api/users/me`
+
+**Description:** Returns the currently authenticated user
+
+**Authentication:** Required
+
+**Response:**
+```json
+{
+  "id": 1,
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "phoneNumber": "1234567890",
+  "profilePicture": null,
+  "location": "New York",
+  "age": 25,
+  "emailVerified": false,
+  "phoneVerified": false,
+  "idVerified": false,
+  "createdAt": "2023-06-15T10:30:00.000+00:00",
+  "updatedAt": "2023-06-15T10:30:00.000+00:00",
+  "roles": ["RENTER"]
+}
+```
+
+#### 2. Get User by ID
+
+**Endpoint:** `GET http://localhost:8080/api/users/{id}`
+
+**Description:** Returns a user by ID
+
+**Authentication:** Required (Admin or self)
+
+**Response:** Same as Get Current User
+
+#### 3. Update User
+
+**Endpoint:** `PUT http://localhost:8080/api/users/{id}`
+
+**Description:** Updates a user's information
+
+**Authentication:** Required (Admin or self)
+
+**Request:**
+- Method: PUT
+- URL: `http://localhost:8080/api/users/{id}`
+- Headers:
+  - Content-Type: application/json
+  - Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+- Body (raw JSON):
+```json
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "phoneNumber": "9876543210",
+  "location": "Los Angeles",
+  "age": 26
+}
+```
+
+**Response:** Updated user object
+
+#### 4. Delete User
+
+**Endpoint:** `DELETE http://localhost:8080/api/users/{id}`
+
+**Description:** Deletes a user
+
+**Authentication:** Required (Admin or self)
+
+#### 5. Change Password
+
+**Endpoint:** `POST http://localhost:8080/api/users/{id}/change-password`
+
+**Description:** Changes a user's password
+
+**Authentication:** Required (self only)
+
+**Request:**
+- Method: POST
+- URL: `http://localhost:8080/api/users/{id}/change-password`
+- Headers:
+  - Content-Type: application/json
+  - Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+- Body (raw JSON):
+```json
+{
+  "currentPassword": "securePassword123",
+  "newPassword": "newSecurePassword456",
+  "confirmPassword": "newSecurePassword456"
+}
+```
+
+**Response:** Updated user object
+
+### Role Management Endpoints
+
+#### 1. Add Role to User
+
+**Endpoint:** `POST http://localhost:8080/api/users/{id}/roles`
+
+**Description:** Adds a role to a user
+
+**Authentication:** Required (Admin only)
+
+**Request:**
+- Method: POST
+- URL: `http://localhost:8080/api/users/{id}/roles`
+- Headers:
+  - Content-Type: application/json
+  - Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+- Body (raw JSON):
+```json
+{
+  "roleType": "OWNER"
+}
+```
+
+**Response:** Updated user object
+
+#### 2. Remove Role from User
+
+**Endpoint:** `DELETE http://localhost:8080/api/users/{id}/roles/{roleType}`
+
+**Description:** Removes a role from a user
+
+**Authentication:** Required (Admin only)
+
+**Response:** Updated user object
+
+### Dashboard Endpoints
+
+#### 1. Renter Dashboard
+
+**Endpoint:** `GET http://localhost:8080/api/dashboard/renter`
+
+**Description:** Returns the renter dashboard
+
+**Authentication:** Required (RENTER role)
+
+**Response:**
+```json
+{
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "roles": ["RENTER"]
+  },
+  "role": "RENTER",
+  "message": "Welcome to your Renter Dashboard!",
+  "availableProperties": 0,
+  "matchedProperties": 0,
+  "pendingRequests": 0
+}
+```
+
+#### 2. Owner Dashboard
+
+**Endpoint:** `GET http://localhost:8080/api/dashboard/owner`
+
+**Description:** Returns the owner dashboard
+
+**Authentication:** Required (OWNER role)
+
+**Response:**
+```json
+{
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "roles": ["OWNER"]
+  },
+  "role": "OWNER",
+  "message": "Welcome to your Owner Dashboard!",
+  "listedProperties": 0,
+  "interestedRenters": 0,
+  "pendingRequests": 0
+}
+```
+
+#### 3. Roommate Host Dashboard
+
+**Endpoint:** `GET http://localhost:8080/api/dashboard/roommate-host`
+
+**Description:** Returns the roommate host dashboard
+
+**Authentication:** Required (ROOMMATE_HOST role)
+
+**Response:**
+```json
+{
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "roles": ["ROOMMATE_HOST"]
+  },
+  "role": "ROOMMATE_HOST",
+  "message": "Welcome to your Roommate Host Dashboard!",
+  "listedRooms": 0,
+  "potentialRoommates": 0,
+  "pendingRequests": 0
+}
+```
+
+#### 4. Admin Dashboard
+
+**Endpoint:** `GET http://localhost:8080/api/dashboard/admin`
+
+**Description:** Returns the admin dashboard
+
+**Authentication:** Required (ADMIN role)
+
+**Response:**
+```json
+{
+  "user": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "roles": ["ADMIN"]
+  },
+  "role": "ADMIN",
+  "message": "Welcome to the Admin Dashboard!",
+  "totalUsers": 0,
+  "totalProperties": 0,
+  "pendingVerifications": 0,
+  "reportedContent": 0
+}
+```
+
 ---
 
 ## 🔚 Conclusion
 
 RentMate combines swipe-based simplicity with deep functionality. From role flexibility and audience targeting to calendar scheduling, AI assistance, and verified identities, it creates a modern, secure, and intelligent rental experience.
+
+# Roomie Fullstack Application
+
+## Problem Description
+
+The application was experiencing an issue in the role selection component where users would see the error message "Failed to get user information". This occurred because the frontend was trying to call an API endpoint `/api/users/me` that didn't exist in the backend.
+
+## Solution
+
+The solution involved implementing the missing endpoint in the backend:
+
+1. Added a `getCurrentUser()` method to the `UserService` class that:
+   - Gets the authenticated user's email from the security context
+   - Retrieves the user from the database using the email
+   - Converts the user entity to a DTO for safe transmission to the client
+
+2. Added a `/api/users/me` endpoint to the `UserController` class that:
+   - Calls the `getCurrentUser()` method from the service
+   - Returns the user information with appropriate error handling
+
+## Frontend Integration
+
+The frontend already has the code to call this endpoint in the `ApiService`:
+
+```
+getCurrentUser(): Observable<any> {
+  return this.http.get(`${this.baseUrl}/api/users/me`, { headers: this.getAuthHeaders() });
+}
+```
+
+This method is used in both the `RoleSelectionComponent` and `DashboardComponent` to get the current user's information.
+
+## Testing
+
+To test the fix:
+1. Start the backend server
+2. Start the frontend application
+3. Log in with valid credentials
+4. Navigate to the role selection page
+5. Verify that the user information is loaded correctly and no error message is displayed
+
+## Additional Notes
+
+- The JWT authentication system is working correctly, with tokens being properly generated and validated
+- The error was purely due to a missing endpoint in the backend
+- No changes were needed to the frontend code as it was already correctly implemented

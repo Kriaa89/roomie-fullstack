@@ -4,188 +4,249 @@ import com.backend.roomie.models.PropretyList;
 import com.backend.roomie.models.User;
 import com.backend.roomie.repositories.PropertyRepository;
 import com.backend.roomie.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
-/**
- * Service class for property-related operations
- * Contains business logic for managing property listings
- */
 @Service
+@RequiredArgsConstructor
 public class PropertyService {
 
-    // Repositories and services for operations
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
-    private final FileUploadService fileUploadService;
 
     /**
-     * Constructor with dependency injection
+     * Get all properties
+     * 
+     * @return list of properties
      */
-    @Autowired
-    public PropertyService(PropertyRepository propertyRepository, UserRepository userRepository, FileUploadService fileUploadService) {
-        this.propertyRepository = propertyRepository;
-        this.userRepository = userRepository;
-        this.fileUploadService = fileUploadService;
+    public List<PropretyList> getAllProperties() {
+        return propertyRepository.findAll();
     }
 
     /**
-     * Create a new property listing
-     * @param ownerId ID of the user who owns the property
-     * @param property the property details
-     * @return the created property
-     * @throws Exception if the user is not found
+     * Get property by ID
+     * 
+     * @param id property ID
+     * @return property
      */
-    @Transactional
-    public PropretyList createProperty(Long ownerId, PropretyList property) throws Exception {
-        // Find the owner by ID
+    public PropretyList getPropertyById(Long id) {
+        return propertyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+    }
+
+    /**
+     * Get properties by owner
+     * 
+     * @param ownerId owner ID
+     * @return list of properties
+     */
+    public List<PropretyList> getPropertiesByOwner(Long ownerId) {
         User owner = userRepository.findById(ownerId)
-                .orElseThrow(() -> new Exception("User not found"));
-
-        // Set owner and timestamps
-        property.setOwner(owner);
-        Date now = new Date();
-        property.setCreatedAt(now);
-        property.setUpdatedAt(now);
-
-        // Save and return the property
-        return propertyRepository.save(property);
-    }
-
-    /**
-     * Get all properties for a user
-     * @param userId ID of the user
-     * @return list of properties owned by the user
-     * @throws Exception if the user is not found
-     */
-    public List<PropretyList> getUserProperties(Long userId) throws Exception {
-        // Find the owner by ID
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new Exception("User not found"));
-
-        // Return all properties owned by the user
+                .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
         return propertyRepository.findByOwner(owner);
     }
 
     /**
-     * Get a property by ID
-     * @param propertyId ID of the property
-     * @return the property
-     * @throws Exception if the property is not found
+     * Get properties by current user
+     * 
+     * @return list of properties
      */
-    public PropretyList getPropertyById(Long propertyId) throws Exception {
-        return propertyRepository.findById(propertyId)
-                .orElseThrow(() -> new Exception("Property not found"));
+    public List<PropretyList> getPropertiesByCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return propertyRepository.findByOwner(user);
     }
 
     /**
-     * Update a property
-     * @param propertyId ID of the property to update
-     * @param propertyUpdates the updated property details
-     * @return the updated property
-     * @throws Exception if the property is not found
+     * Get available properties
+     * 
+     * @return list of available properties
+     */
+    public List<PropretyList> getAvailableProperties() {
+        return propertyRepository.findByAvailability(true);
+    }
+
+    /**
+     * Get properties by type
+     * 
+     * @param type property type
+     * @return list of properties
+     */
+    public List<PropretyList> getPropertiesByType(String type) {
+        return propertyRepository.findByType(type);
+    }
+
+    /**
+     * Get properties by location
+     * 
+     * @param location property location
+     * @return list of properties
+     */
+    public List<PropretyList> getPropertiesByLocation(String location) {
+        return propertyRepository.findByLocationContaining(location);
+    }
+
+    /**
+     * Create property
+     * 
+     * @param property property data
+     * @return created property
      */
     @Transactional
-    public PropretyList updateProperty(Long propertyId, PropretyList propertyUpdates) throws Exception {
-        // Find the existing property
-        PropretyList existingProperty = propertyRepository.findById(propertyId)
-                .orElseThrow(() -> new Exception("Property not found"));
+    public PropretyList createProperty(PropretyList property) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
 
-        // Update fields if provided
-        if (propertyUpdates.getName() != null) {
-            existingProperty.setName(propertyUpdates.getName());
-        }
-        if (propertyUpdates.getType() != null) {
-            existingProperty.setType(propertyUpdates.getType());
-        }
-        if (propertyUpdates.getLocation() != null) {
-            existingProperty.setLocation(propertyUpdates.getLocation());
-        }
-        if (propertyUpdates.getPrice() != null) {
-            existingProperty.setPrice(propertyUpdates.getPrice());
-        }
-        if (propertyUpdates.getDescription() != null) {
-            existingProperty.setDescription(propertyUpdates.getDescription());
-        }
-        if (propertyUpdates.getImages() != null) {
-            existingProperty.setImages(propertyUpdates.getImages());
-        }
-        if (propertyUpdates.getAmenities() != null) {
-            existingProperty.setAmenities(propertyUpdates.getAmenities());
-        }
-        if (propertyUpdates.getSurface() != null) {
-            existingProperty.setSurface(propertyUpdates.getSurface());
-        }
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Update room counts
-        existingProperty.setNumberOfRooms(propertyUpdates.getNumberOfRooms());
-        existingProperty.setNumberOfBathrooms(propertyUpdates.getNumberOfBathrooms());
-        existingProperty.setNumberOfBedrooms(propertyUpdates.getNumberOfBedrooms());
+        property.setOwner(user);
+        property.setCreatedAt(new Date());
+        property.setUpdatedAt(new Date());
 
-        if (propertyUpdates.getPropertyRules() != null) {
-            existingProperty.setPropertyRules(propertyUpdates.getPropertyRules());
-        }
-
-        // Update availability
-        existingProperty.setAvailability(propertyUpdates.isAvailability());
-
-        if (propertyUpdates.getAudiance() != null) {
-            existingProperty.setAudiance(propertyUpdates.getAudiance());
-        }
-
-        // Update timestamp
-        existingProperty.setUpdatedAt(new Date());
-
-        // Save and return the updated property
-        return propertyRepository.save(existingProperty);
+        return propertyRepository.save(property);
     }
 
     /**
-     * Delete a property
-     * @param propertyId ID of the property to delete
-     * @throws Exception if the property is not found
+     * Update property
+     * 
+     * @param id property ID
+     * @param propertyDetails property details
+     * @return updated property
      */
     @Transactional
-    public void deleteProperty(Long propertyId) throws Exception {
-        // Check if property exists
-        if (!propertyRepository.existsById(propertyId)) {
-            throw new Exception("Property not found");
+    public PropretyList updateProperty(Long id, Map<String, Object> propertyDetails) {
+        PropretyList property = propertyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+
+        // Verify ownership
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!property.getOwner().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You don't have permission to update this property");
         }
 
-        // Delete the property
-        propertyRepository.deleteById(propertyId);
+        // Update property fields
+        if (propertyDetails.containsKey("name")) {
+            property.setName((String) propertyDetails.get("name"));
+        }
+        if (propertyDetails.containsKey("type")) {
+            property.setType((String) propertyDetails.get("type"));
+        }
+        if (propertyDetails.containsKey("location")) {
+            property.setLocation((String) propertyDetails.get("location"));
+        }
+        if (propertyDetails.containsKey("price")) {
+            property.setPrice((String) propertyDetails.get("price"));
+        }
+        if (propertyDetails.containsKey("description")) {
+            property.setDescription((String) propertyDetails.get("description"));
+        }
+        if (propertyDetails.containsKey("images")) {
+            property.setImages((String) propertyDetails.get("images"));
+        }
+        if (propertyDetails.containsKey("amenities")) {
+            property.setAmenities((String) propertyDetails.get("amenities"));
+        }
+        if (propertyDetails.containsKey("surface")) {
+            property.setSurface((String) propertyDetails.get("surface"));
+        }
+        if (propertyDetails.containsKey("numberOfRooms")) {
+            property.setNumberOfRooms((Integer) propertyDetails.get("numberOfRooms"));
+        }
+        if (propertyDetails.containsKey("numberOfBathrooms")) {
+            property.setNumberOfBathrooms((Integer) propertyDetails.get("numberOfBathrooms"));
+        }
+        if (propertyDetails.containsKey("numberOfBedrooms")) {
+            property.setNumberOfBedrooms((Integer) propertyDetails.get("numberOfBedrooms"));
+        }
+        if (propertyDetails.containsKey("propertyRules")) {
+            property.setPropertyRules((String) propertyDetails.get("propertyRules"));
+        }
+        if (propertyDetails.containsKey("availability")) {
+            property.setAvailability((Boolean) propertyDetails.get("availability"));
+        }
+        if (propertyDetails.containsKey("audiance")) {
+            property.setAudiance((String) propertyDetails.get("audiance"));
+        }
+
+        property.setUpdatedAt(new Date());
+
+        return propertyRepository.save(property);
     }
 
     /**
-     * Upload property images
-     * @param propertyId ID of the property
-     * @param file the image file to upload
-     * @return URL of the uploaded image
-     * @throws Exception if the property is not found or the file cannot be uploaded
+     * Delete property
+     * 
+     * @param id property ID
      */
-    public String uploadPropertyImage(Long propertyId, MultipartFile file) throws Exception {
-        // Find the property
-        PropretyList property = propertyRepository.findById(propertyId)
-                .orElseThrow(() -> new Exception("Property not found"));
+    @Transactional
+    public void deleteProperty(Long id) {
+        PropretyList property = propertyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
 
-        try {
-            // Upload the file and get the URL using FileUploadService
-            String imageUrl = fileUploadService.uploadPropertyImage(file);
+        // Verify ownership
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
 
-            // Update property images
-            property.setImages(imageUrl);
-            property.setUpdatedAt(new Date());
-            propertyRepository.save(property);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            return imageUrl;
-        } catch (IOException e) {
-            throw new Exception("Failed to upload property image: " + e.getMessage());
+        if (!property.getOwner().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You don't have permission to delete this property");
         }
+
+        propertyRepository.delete(property);
+    }
+
+    /**
+     * Count properties by owner
+     * 
+     * @param ownerId owner ID
+     * @return count of properties
+     */
+    public long countPropertiesByOwner(Long ownerId) {
+        User owner = userRepository.findById(ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
+        return propertyRepository.findByOwner(owner).size();
+    }
+
+    /**
+     * Count properties by current user
+     * 
+     * @return count of properties
+     */
+    public long countPropertiesByCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        return propertyRepository.findByOwner(user).size();
+    }
+
+    /**
+     * Count all properties
+     * 
+     * @return count of all properties
+     */
+    public long countAllProperties() {
+        return propertyRepository.count();
     }
 }

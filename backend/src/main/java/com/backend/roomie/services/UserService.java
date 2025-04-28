@@ -1,181 +1,255 @@
 package com.backend.roomie.services;
 
+import com.backend.roomie.dtos.UserDTO;
 import com.backend.roomie.models.User;
 import com.backend.roomie.models.UserRole;
 import com.backend.roomie.repositories.UserRepository;
 import com.backend.roomie.repositories.UserRoleRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * Service for handling user operations
+ */
 @Service
 @RequiredArgsConstructor
-public class UserService implements UserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
     private final UserRoleRepository userRoleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    private final FileUploadService fileUploadService;
-
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    /**
+     * Get current authenticated user
+     * 
+     * @return UserDTO of current user
+     */
+    public UserDTO getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .authorities("ROLE_USER") // Temporary authority (replace with dynamic roles)
-                .build();
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        return convertToDTO(user);
     }
 
     /**
-     * Register a new user
-     * @param user the user to register
-     * @return the registered user
-     * @throws Exception if the email is already in use or passwords don't match
+     * Get user by ID
+     * 
+     * @param id user ID
+     * @return UserDTO
+     */
+    public UserDTO getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        return convertToDTO(user);
+    }
+
+    /**
+     * Get all users
+     * 
+     * @return list of UserDTOs
+     */
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Update user
+     * 
+     * @param id user ID
+     * @param userDTO user data
+     * @return updated UserDTO
      */
     @Transactional
-    public User registerUser(User user) throws Exception {
-        // Check if email already exists
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new Exception("Email already in use");
+    public UserDTO updateUser(Long id, UserDTO userDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        // Update user fields
+        if (userDTO.getFirstName() != null) {
+            user.setFirstName(userDTO.getFirstName());
         }
-
-        // Check if password and password confirmation match
-        if (!user.getPassword().equals(user.getPasswordConfirmation())) {
-            throw new Exception("Passwords do not match");
+        if (userDTO.getLastName() != null) {
+            user.setLastName(userDTO.getLastName());
         }
-
-        // Encode password
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // Set creation and update timestamps
-        Date now = new Date();
-        user.setCreatedAt(now);
-        user.setUpdatedAt(now);
-
-        // Save user
-        return userRepository.save(user);
+        if (userDTO.getPhoneNumber() != null) {
+            user.setPhoneNumber(userDTO.getPhoneNumber());
+        }
+        if (userDTO.getProfilePicture() != null) {
+            user.setProfilePicture(userDTO.getProfilePicture());
+        }
+        if (userDTO.getLocation() != null) {
+            user.setLocation(userDTO.getLocation());
+        }
+        if (userDTO.getAge() != null) {
+            user.setAge(userDTO.getAge());
+        }
+        
+        user.setUpdatedAt(new Date());
+        
+        User updatedUser = userRepository.save(user);
+        
+        return convertToDTO(updatedUser);
     }
 
     /**
-     * Login a user
-     * @param email the user's email
-     * @param password the user's password
-     * @return the logged in user if credentials are valid, empty otherwise
-     */
-    public Optional<User> loginUser(String email, String password) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
-
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            if (passwordEncoder.matches(password, user.getPassword())) {
-                return userOpt;
-            }
-        }
-
-        return Optional.empty();
-    }
-
-    /**
-     * Assign a role to a user
-     * @param userId the user's ID
-     * @param roleType the role type to assign
-     * @throws Exception if the user is not found
+     * Delete user
+     * 
+     * @param id user ID
      */
     @Transactional
-    public void assignRole(Long userId, UserRole.RoleType roleType) throws Exception {
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        userRepository.delete(user);
+    }
+
+    /**
+     * Add role to user
+     * 
+     * @param userId user ID
+     * @param roleType role type
+     * @return updated UserDTO
+     */
+    @Transactional
+    public UserDTO addRoleToUser(Long userId, UserRole.RoleType roleType) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new Exception("User not found"));
-
-        // Create a new role
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        // Check if user already has this role
+        boolean hasRole = user.getRoles().stream()
+                .anyMatch(role -> role.getRoleType() == roleType);
+        
+        if (hasRole) {
+            throw new IllegalArgumentException("User already has this role");
+        }
+        
+        // Create new role
         UserRole role = new UserRole();
         role.setUser(user);
         role.setRoleType(roleType);
-
-        // Set creation and update timestamps
-        Date now = new Date();
-        role.setCreatedAt(now);
-        role.setUpdatedAt(now);
-
+        role.setCreatedAt(new Date());
+        role.setUpdatedAt(new Date());
+        
         // Save role
         userRoleRepository.save(role);
+        
+        // Refresh user to get updated roles
+        User updatedUser = userRepository.findById(userId).orElseThrow();
+        
+        return convertToDTO(updatedUser);
     }
 
     /**
-     * Update a user's profile
-     * @param userId the user's ID
-     * @param userUpdates the updated user details
-     * @return the updated user
-     * @throws Exception if the user is not found
+     * Remove role from user
+     * 
+     * @param userId user ID
+     * @param roleType role type
+     * @return updated UserDTO
      */
     @Transactional
-    public User updateUserProfile(Long userId, User userUpdates) throws Exception {
-        // Find the user by ID
-        User existingUser = userRepository.findById(userId)
-                .orElseThrow(() -> new Exception("User not found"));
-
-        // Update fields if provided
-        if (userUpdates.getFirstName() != null) {
-            existingUser.setFirstName(userUpdates.getFirstName());
-        }
-        if (userUpdates.getLastName() != null) {
-            existingUser.setLastName(userUpdates.getLastName());
-        }
-        if (userUpdates.getPhoneNumber() != null) {
-            existingUser.setPhoneNumber(userUpdates.getPhoneNumber());
-        }
-        if (userUpdates.getLocation() != null) {
-            existingUser.setLocation(userUpdates.getLocation());
-        }
-        if (userUpdates.getAge() != null) {
-            existingUser.setAge(userUpdates.getAge());
-        }
-
-        // Update timestamp
-        existingUser.setUpdatedAt(new Date());
-
-        // Save and return the updated user
-        return userRepository.save(existingUser);
-    }
-
-    /**
-     * Upload a user's profile picture
-     * @param userId the user's ID
-     * @param file the profile picture file
-     * @return the updated user
-     * @throws Exception if the user is not found or the file cannot be uploaded
-     */
-    @Transactional
-    public User uploadProfilePicture(Long userId, MultipartFile file) throws Exception {
-        // Find the user by ID
+    public UserDTO removeRoleFromUser(Long userId, UserRole.RoleType roleType) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new Exception("User not found"));
-
-        try {
-            // Upload the file and get the URL
-            String profilePictureUrl = fileUploadService.uploadProfilePicture(file);
-
-            // Update profile picture URL
-            user.setProfilePicture(profilePictureUrl);
-            user.setUpdatedAt(new Date());
-
-            // Save and return the updated user
-            return userRepository.save(user);
-        } catch (IOException e) {
-            throw new Exception("Failed to upload profile picture: " + e.getMessage());
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        // Find role to remove
+        Optional<UserRole> roleToRemove = user.getRoles().stream()
+                .filter(role -> role.getRoleType() == roleType)
+                .findFirst();
+        
+        if (roleToRemove.isEmpty()) {
+            throw new IllegalArgumentException("User does not have this role");
         }
+        
+        // Check if it's the only role
+        if (user.getRoles().size() == 1) {
+            throw new IllegalArgumentException("Cannot remove the only role from user");
+        }
+        
+        // Remove role
+        userRoleRepository.delete(roleToRemove.get());
+        
+        // Refresh user to get updated roles
+        User updatedUser = userRepository.findById(userId).orElseThrow();
+        
+        return convertToDTO(updatedUser);
+    }
+
+    /**
+     * Change user password
+     * 
+     * @param userId user ID
+     * @param currentPassword current password
+     * @param newPassword new password
+     * @param confirmPassword confirm new password
+     * @return updated UserDTO
+     */
+    @Transactional
+    public UserDTO changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        // Validate current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+        
+        // Validate new password
+        if (newPassword == null || newPassword.isEmpty()) {
+            throw new IllegalArgumentException("New password is required");
+        }
+        
+        // Validate password confirmation
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("Passwords do not match");
+        }
+        
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdatedAt(new Date());
+        
+        User updatedUser = userRepository.save(user);
+        
+        return convertToDTO(updatedUser);
+    }
+
+    /**
+     * Convert User entity to UserDTO
+     * 
+     * @param user User entity
+     * @return UserDTO
+     */
+    private UserDTO convertToDTO(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .profilePicture(user.getProfilePicture())
+                .location(user.getLocation())
+                .age(user.getAge())
+                .emailVerified(user.getEmailVerified())
+                .phoneVerified(user.getPhoneVerified())
+                .idVerified(user.getIdVerified())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .roles(UserDTO.convertRoles(user.getRoles()))
+                .build();
     }
 }

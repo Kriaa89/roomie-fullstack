@@ -1,11 +1,11 @@
 package com.backend.roomie.config;
 
-import com.backend.roomie.models.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -15,26 +15,36 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Service for handling JWT operations
+ * Generates, validates, and extracts information from JWT tokens
+ */
 @Service
 public class JwtService {
-    // Secret key for signing JWT tokens
-    private static final String SECRET_KEY = "6b3c4d4a36c2a0b4cc1b63e761ae1835c00e361207d4d79fc7538609a711abe6";
+
+    // Secret key for signing JWT tokens - should be at least 256 bits
+    @Value("${jwt.secret:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}")
+    private String secretKey;
+
+    // Token expiration time in milliseconds (default: 24 hours)
+    @Value("${jwt.expiration:86400000}")
+    private long jwtExpiration;
 
     /**
-     * Extracts the username (subject) from the JWT token.
-     *
-     * @param token the JWT token
-     * @return the username extracted from the token
+     * Extract username (subject) from token
+     * 
+     * @param token JWT token
+     * @return username extracted from token
      */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
     /**
-     * Extracts a specific claim from the JWT token using the provided claims resolver.
-     *
-     * @param token the JWT token
-     * @param claimsResolver the function to extract a specific claim
+     * Extract a specific claim from token using a claims resolver function
+     * 
+     * @param token JWT token
+     * @param claimsResolver function to extract specific claim
      * @return the extracted claim
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -43,40 +53,38 @@ public class JwtService {
     }
 
     /**
-     * Generates a JWT token for the given user.
-     *
-     * @param user the user for whom to generate the token
-     * @return the generated JWT token
+     * Generate token for a user without extra claims
+     * 
+     * @param userDetails user details
+     * @return generated JWT token
      */
-    public String generateToken(User user) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("username", user.getEmail());
-        return generateToken(claims, user.getEmail());
+    public String generateToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails);
     }
 
     /**
-     * Generates a JWT token with the given claims and subject.
-     *
-     * @param extraClaims additional claims to include in the token
-     * @param subject the subject of the token (typically the username)
-     * @return the generated JWT token
+     * Generate token with extra claims
+     * 
+     * @param extraClaims additional claims to include in token
+     * @param userDetails user details
+     * @return generated JWT token
      */
-    public String generateToken(Map<String, Object> extraClaims, String subject) {
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder()
                 .setClaims(extraClaims)
-                .setSubject(subject)
+                .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 hours validity
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
     /**
-     * Validates if the given token is valid for the provided user details.
-     *
-     * @param token the JWT token to validate
-     * @param userDetails the user details to validate against
-     * @return true if the token is valid, false otherwise
+     * Validate if token is valid for the given user
+     * 
+     * @param token JWT token
+     * @param userDetails user details
+     * @return true if token is valid, false otherwise
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
@@ -84,30 +92,30 @@ public class JwtService {
     }
 
     /**
-     * Checks if the token is expired.
-     *
-     * @param token the JWT token to check
-     * @return true if the token is expired, false otherwise
+     * Check if token is expired
+     * 
+     * @param token JWT token
+     * @return true if token is expired, false otherwise
      */
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
     /**
-     * Extracts the expiration date from the JWT token.
-     *
-     * @param token the JWT token
-     * @return the expiration date
+     * Extract expiration date from token
+     * 
+     * @param token JWT token
+     * @return expiration date
      */
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
     /**
-     * Extracts all claims from the JWT token.
-     *
-     * @param token the JWT token
-     * @return all claims from the token
+     * Extract all claims from token
+     * 
+     * @param token JWT token
+     * @return all claims
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
@@ -118,12 +126,12 @@ public class JwtService {
     }
 
     /**
-     * Gets the signing key for JWT token verification.
-     *
-     * @return the signing key
+     * Get signing key from secret key
+     * 
+     * @return signing key
      */
     private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

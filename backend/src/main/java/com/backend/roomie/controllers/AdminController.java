@@ -1,7 +1,9 @@
 package com.backend.roomie.controllers;
 
 import com.backend.roomie.dtos.UserDTO;
+import com.backend.roomie.models.PropretyList;
 import com.backend.roomie.models.UserRole;
+import com.backend.roomie.services.PropertyService;
 import com.backend.roomie.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,28 +15,25 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Controller for user operations
+ * Controller for admin operations
  */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/admin")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
-public class UserController {
+public class AdminController {
 
     private final UserService userService;
+    private final PropertyService propertyService;
 
     /**
-     * Get current authenticated user
+     * Get all users
      * 
-     * @return current user
+     * @return list of users
      */
-    @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser() {
-        try {
-            UserDTO user = userService.getCurrentUser();
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     /**
@@ -43,8 +42,7 @@ public class UserController {
      * @param id user ID
      * @return user
      */
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userService.getCurrentUser().getId() == #id")
+    @GetMapping("/users/{id}")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         try {
             UserDTO user = userService.getUserById(id);
@@ -55,26 +53,13 @@ public class UserController {
     }
 
     /**
-     * Get all users
-     * 
-     * @return list of users
-     */
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-        List<UserDTO> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
-    }
-
-    /**
      * Update user
      * 
      * @param id user ID
      * @param userDTO user data
      * @return updated user
      */
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userService.getCurrentUser().getId() == #id")
+    @PutMapping("/users/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
         try {
             UserDTO updatedUser = userService.updateUser(id, userDTO);
@@ -90,8 +75,7 @@ public class UserController {
      * @param id user ID
      * @return response
      */
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userService.getCurrentUser().getId() == #id")
+    @DeleteMapping("/users/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
@@ -108,15 +92,14 @@ public class UserController {
      * @param request request with role type
      * @return updated user
      */
-    @PostMapping("/{id}/roles")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/users/{id}/roles")
     public ResponseEntity<?> addRoleToUser(@PathVariable Long id, @RequestBody Map<String, String> request) {
         try {
             String roleTypeStr = request.get("roleType");
             if (roleTypeStr == null) {
                 return ResponseEntity.badRequest().body("Role type is required");
             }
-            
+
             UserRole.RoleType roleType = UserRole.RoleType.valueOf(roleTypeStr.toUpperCase());
             UserDTO updatedUser = userService.addRoleToUser(id, roleType);
             return ResponseEntity.ok(updatedUser);
@@ -132,8 +115,7 @@ public class UserController {
      * @param roleType role type
      * @return updated user
      */
-    @DeleteMapping("/{id}/roles/{roleType}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/users/{id}/roles/{roleType}")
     public ResponseEntity<?> removeRoleFromUser(@PathVariable Long id, @PathVariable String roleType) {
         try {
             UserRole.RoleType type = UserRole.RoleType.valueOf(roleType.toUpperCase());
@@ -145,28 +127,64 @@ public class UserController {
     }
 
     /**
-     * Change user password
+     * Get all properties
      * 
-     * @param id user ID
-     * @param request request with passwords
-     * @return updated user
+     * @return list of properties
      */
-    @PostMapping("/{id}/change-password")
-    @PreAuthorize("@userService.getCurrentUser().getId() == #id")
-    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody Map<String, String> request) {
+    @GetMapping("/properties")
+    public ResponseEntity<List<PropretyList>> getAllProperties() {
+        return ResponseEntity.ok(propertyService.getAllProperties());
+    }
+
+    /**
+     * Get property by ID
+     * 
+     * @param id property ID
+     * @return property
+     */
+    @GetMapping("/properties/{id}")
+    public ResponseEntity<?> getPropertyById(@PathVariable Long id) {
         try {
-            String currentPassword = request.get("currentPassword");
-            String newPassword = request.get("newPassword");
-            String confirmPassword = request.get("confirmPassword");
-            
-            if (currentPassword == null || newPassword == null || confirmPassword == null) {
-                return ResponseEntity.badRequest().body("All password fields are required");
-            }
-            
-            UserDTO updatedUser = userService.changePassword(id, currentPassword, newPassword, confirmPassword);
-            return ResponseEntity.ok(updatedUser);
+            PropretyList property = propertyService.getPropertyById(id);
+            return ResponseEntity.ok(property);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
+    }
+
+    /**
+     * Delete property
+     * 
+     * @param id property ID
+     * @return response
+     */
+    @DeleteMapping("/properties/{id}")
+    public ResponseEntity<?> deleteProperty(@PathVariable Long id) {
+        try {
+            // Admin can delete any property without ownership check
+            // First verify the property exists
+            propertyService.getPropertyById(id);
+            // Then delete it using the service method
+            propertyService.deleteProperty(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Get admin dashboard statistics
+     * 
+     * @return admin dashboard statistics
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getAdminStats() {
+        long totalUsers = userService.getAllUsers().size();
+        long totalProperties = propertyService.countAllProperties();
+
+        return ResponseEntity.ok(Map.of(
+            "totalUsers", totalUsers,
+            "totalProperties", totalProperties
+        ));
     }
 }
