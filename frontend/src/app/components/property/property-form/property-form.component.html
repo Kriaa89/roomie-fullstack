@@ -186,6 +186,11 @@
           <small class="form-text text-muted">Select multiple images to upload (jpg, jpeg, png, gif)</small>
         </div>
 
+        <!-- Validation message for images -->
+        <div *ngIf="propertyForm.get('images')?.invalid && propertyForm.get('images')?.touched" class="error-message">
+          <span>At least one image is required</span>
+        </div>
+
         <!-- Image previews -->
         <div *ngIf="previewUrls.length > 0" class="image-previews">
           <div *ngFor="let url of previewUrls; let i = index" class="image-preview-item">

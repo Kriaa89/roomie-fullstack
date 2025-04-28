@@ -28,6 +28,13 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Check for error message from property form
+    const propertyFormError = localStorage.getItem('propertyFormError');
+    if (propertyFormError) {
+      this.errorMessage = propertyFormError;
+      localStorage.removeItem('propertyFormError'); // Clear the error message
+    }
+
     this.loadUserData();
   }
 

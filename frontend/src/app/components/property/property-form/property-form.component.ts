@@ -38,6 +38,14 @@ export class PropertyFormComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Check if user has OWNER role
+    if (!this.authService.hasRole('OWNER')) {
+      // Store error message in localStorage to display it on dashboard
+      localStorage.setItem('propertyFormError', 'You need to have the OWNER role to create or edit properties.');
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
     this.route.params.subscribe(params => {
       if (params['id']) {
         this.propertyId = +params['id'];
@@ -54,7 +62,7 @@ export class PropertyFormComponent implements OnInit {
       location: ['', [Validators.required]],
       price: ['', [Validators.required]],
       description: ['', [Validators.required]],
-      images: [''],
+      images: ['', [Validators.required]],
       amenities: [''],
       surface: [''],
       numberOfRooms: [null],
@@ -140,9 +148,13 @@ export class PropertyFormComponent implements OnInit {
       } else {
         this.createProperty();
       }
-    } catch (error) {
+    } catch (error: any) {
       this.isLoading = false;
-      this.errorMessage = 'Failed to upload images. Please try again.';
+      if (error.message && error.message.includes('Please select at least one image')) {
+        this.errorMessage = error.message;
+      } else {
+        this.errorMessage = 'Failed to upload images. Please try again.';
+      }
       console.error('Error uploading images:', error);
     }
   }
@@ -211,6 +223,16 @@ export class PropertyFormComponent implements OnInit {
           this.errorMessage = 'Please select valid image files (jpg, jpeg, png, gif)';
         }
       }
+
+      // Update the images form control
+      if (this.selectedFiles.length > 0) {
+        // Set a temporary value to satisfy the validator
+        this.propertyForm.get('images')?.setValue('temp');
+        this.propertyForm.get('images')?.markAsTouched();
+      } else {
+        this.propertyForm.get('images')?.setValue('');
+        this.propertyForm.get('images')?.markAsTouched();
+      }
     }
   }
 
@@ -230,6 +252,15 @@ export class PropertyFormComponent implements OnInit {
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
     this.previewUrls.splice(index, 1);
+
+    // Update the images form control
+    if (this.selectedFiles.length > 0) {
+      // Set a temporary value to satisfy the validator
+      this.propertyForm.get('images')?.setValue('temp');
+    } else {
+      this.propertyForm.get('images')?.setValue('');
+    }
+    this.propertyForm.get('images')?.markAsTouched();
   }
 
   triggerFileInput(): void {
@@ -239,9 +270,14 @@ export class PropertyFormComponent implements OnInit {
   // This method will be called before form submission to handle file uploads
   async uploadFiles(): Promise<string[]> {
     if (this.selectedFiles.length === 0) {
-      // If no new files selected, return the existing images
-      return this.propertyForm.get('images')?.value ?
-        this.propertyForm.get('images')?.value.split(',') : [];
+      // If no new files selected, check if we have existing images
+      const existingImages = this.propertyForm.get('images')?.value;
+      if (existingImages) {
+        return existingImages.split(',');
+      } else {
+        // No files selected and no existing images
+        throw new Error('Please select at least one image for the property');
+      }
     }
 
     const uploadedUrls: string[] = [];
