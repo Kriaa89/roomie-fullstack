@@ -1,0 +1,42 @@
+<div class="role-selection-container">
+  <div class="role-selection-card">
+    <h2>Select Your Role</h2>
+    <p class="subtitle">Choose a role to access specific features in the application</p>
+
+    <div *ngIf="availableRoles.length === 0" class="no-roles-message">
+      <p>You already have all available roles. Redirecting to dashboard...</p>
+    </div>
+
+    <div *ngIf="availableRoles.length > 0" class="roles-grid">
+      <div
+        *ngFor="let role of availableRoles"
+        class="role-card"
+        [class.selected]="selectedRole === role.type"
+        (click)="selectRole(role.type)"
+      >
+        <div class="role-icon">
+          <i *ngIf="role.type === 'OWNER'" class="fas fa-home"></i>
+          <i *ngIf="role.type === 'RENTER'" class="fas fa-key"></i>
+          <i *ngIf="role.type === 'ROOMMATE_HOST'" class="fas fa-users"></i>
+        </div>
+        <h3>{{ role.title }}</h3>
+        <p>{{ role.description }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+
+    <div class="actions">
+      <button
+        class="btn btn-primary"
+        [disabled]="!selectedRole || isLoading"
+        (click)="confirmSelection()"
+      >
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        {{ isLoading ? 'Processing...' : 'Confirm Selection' }}
+      </button>
+    </div>
+  </div>
+</div>
