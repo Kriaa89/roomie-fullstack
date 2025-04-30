@@ -1,22 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { PropertyService } from '../../services/property.service';
-import { Property } from '../../models/property.model';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
   user: any = null;
-  properties: Property[] = [];
-  myProperties: Property[] = [];
-  availableProperties: Property[] = [];
+  properties: any[] = [];
+  myProperties: any[] = [];
+  availableProperties: any[] = [];
   isLoading: boolean = false;
   errorMessage: string = '';
   activeTab: string = 'all'; // Default tab

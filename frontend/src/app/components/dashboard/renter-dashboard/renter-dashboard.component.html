@@ -1,7 +1,7 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
     <div class="logo">
-      <h1>Roomie - Renter Dashboard</h1>
+      <h1>RentMate - Renter Dashboard</h1>
     </div>
     <div class="user-info" *ngIf="user">
       <span>Welcome, {{ user.firstName }} {{ user.lastName }}</span>
@@ -21,51 +21,279 @@
       <nav class="dashboard-nav">
         <h3>Navigation</h3>
         <ul>
-          <li><a routerLink="/renter-dashboard" class="active">Renter Dashboard</a></li>
-          <li><a routerLink="/properties/available">Available Properties</a></li>
+          <li><a routerLink="/renter-dashboard" class="active">Dashboard</a></li>
+          <li><a routerLink="/properties/swipe" (click)="$event.preventDefault(); navigateToPropertySwipe()">Browse Properties</a></li>
+          <li><a routerLink="/matches">My Matches</a></li>
+          <li><a routerLink="/messages">Messages</a></li>
+          <li><a routerLink="/appointments">Appointments</a></li>
           <li><a routerLink="/profile">My Profile</a></li>
         </ul>
       </nav>
+
+      <div class="sidebar-cta">
+        <button class="btn btn-primary btn-block" (click)="navigateToPropertySwipe()">
+          <i class="fas fa-search"></i> Find Properties
+        </button>
+      </div>
     </div>
 
     <main class="main-content">
-      <div class="actions-bar">
-        <h2>Available Properties</h2>
-      </div>
-
-      <div *ngIf="isLoading" class="loading-spinner">
-        <div class="spinner"></div>
-        <p>Loading properties...</p>
-      </div>
-
-      <div *ngIf="errorMessage" class="alert alert-danger">
-        {{ errorMessage }}
-      </div>
-
-      <div *ngIf="!isLoading && availableProperties.length === 0" class="no-data">
-        <p>No available properties at the moment.</p>
-      </div>
-
-      <div *ngIf="!isLoading && availableProperties.length > 0" class="properties-grid">
-        <div *ngFor="let property of availableProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
-          <div class="property-image">
-            <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
-            <div class="property-badge available">Available</div>
+      <!-- Dashboard Overview -->
+      <div class="dashboard-overview">
+        <div class="welcome-banner">
+          <div class="welcome-content">
+            <h2>Welcome to Your Renter Dashboard</h2>
+            <p>Find your perfect property, connect with owners, and manage your rental journey all in one place.</p>
           </div>
-          <div class="property-details">
-            <h3>{{ property.name }}</h3>
-            <p class="property-location">
-              <i class="fas fa-map-marker-alt"></i> {{ property.location }}
-            </p>
-            <p class="property-price">{{ property.price }}</p>
-            <div class="property-info">
-              <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
-              <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
-              <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
-            </div>
-            <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
+          <div class="welcome-actions">
+            <button class="btn btn-primary" (click)="$event.preventDefault(); navigateToPropertySwipe()">
+              <i class="fas fa-search"></i> Browse Properties
+            </button>
+            <button class="btn btn-secondary" (click)="setActiveSection('profile')">
+              <i class="fas fa-user-edit"></i> Complete Your Profile
+            </button>
           </div>
         </div>
+
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-building"></i></div>
+            <div class="stat-info">
+              <h3>{{ availableProperties.length }}</h3>
+              <p>Available Properties</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-handshake"></i></div>
+            <div class="stat-info">
+              <h3>0</h3>
+              <p>Matches</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-info">
+              <h3>0</h3>
+              <p>Upcoming Visits</p>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-comments"></i></div>
+            <div class="stat-info">
+              <h3>0</h3>
+              <p>Unread Messages</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Sections -->
+      <div class="dashboard-sections">
+        <!-- Browse Properties Section -->
+        <section class="dashboard-section" [class.active]="activeSection === 'browse'">
+          <div class="section-header">
+            <h2><i class="fas fa-search"></i> Browse Properties</h2>
+            <div class="section-actions">
+              <button class="btn btn-sm btn-outline">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+              <button class="btn btn-sm btn-outline">
+                <i class="fas fa-sort"></i> Sort
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="isLoading" class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading properties...</p>
+          </div>
+
+          <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+          </div>
+
+          <div *ngIf="!isLoading && availableProperties.length === 0" class="no-data">
+            <p>No available properties at the moment.</p>
+          </div>
+
+          <div *ngIf="!isLoading && availableProperties.length > 0" class="properties-grid">
+            <div *ngFor="let property of availableProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
+              <div class="property-badge available">Available</div>
+              <div class="property-details">
+                <h3>{{ property.name }}</h3>
+                <p class="property-location">
+                  <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+                </p>
+                <p class="property-price">{{ property.price }}</p>
+                <div class="property-info">
+                  <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
+                  <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
+                  <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
+                </div>
+                <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
+                <div class="property-actions">
+                  <button class="btn btn-sm btn-primary" (click)="property.id && expressInterest(property.id, $event)">
+                    <i class="fas fa-thumbs-up"></i> Interested
+                  </button>
+                  <button class="btn btn-sm btn-secondary" (click)="property.id && scheduleVisit(property.id, $event)">
+                    <i class="fas fa-calendar-alt"></i> Schedule Visit
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Profile Management Section -->
+        <section class="dashboard-section" [class.active]="activeSection === 'profile'">
+          <div class="section-header">
+            <h2><i class="fas fa-user-circle"></i> Profile Management</h2>
+          </div>
+
+          <div class="profile-card">
+            <div class="profile-header">
+              <div class="profile-info">
+                <h3>{{ user?.firstName }} {{ user?.lastName }}</h3>
+                <p><i class="fas fa-envelope"></i> {{ user?.email }}</p>
+              </div>
+            </div>
+
+            <div class="profile-sections">
+              <div class="profile-section">
+                <h4>Personal Information</h4>
+                <div class="form-group">
+                  <label>Occupation <span class="required">*</span></label>
+                  <input type="text" class="form-control" placeholder="Enter your occupation" [(ngModel)]="profileModel.occupation" name="occupation" required>
+                  <small class="form-text text-muted">Your current job or profession</small>
+                </div>
+                <div class="form-group">
+                  <label>Current City <span class="required">*</span></label>
+                  <input type="text" class="form-control" placeholder="Enter your current city" [(ngModel)]="profileModel.city" name="city" required>
+                  <small class="form-text text-muted">This will also be used as your location</small>
+                </div>
+                <div class="form-group">
+                  <label>Bio <span class="required">*</span></label>
+                  <textarea class="form-control" placeholder="Tell us about yourself" [(ngModel)]="profileModel.bio" name="bio" required></textarea>
+                  <small class="form-text text-muted">A brief description about yourself</small>
+                </div>
+              </div>
+
+              <div class="profile-section">
+                <h4>Rental Preferences</h4>
+                <div class="form-group">
+                  <label>Budget Range <span class="required">*</span></label>
+                  <div class="range-inputs">
+                    <input type="number" class="form-control" placeholder="Min" [(ngModel)]="profileModel.budgetMin" name="budgetMin" required>
+                    <span>to</span>
+                    <input type="number" class="form-control" placeholder="Max" [(ngModel)]="profileModel.budgetMax" name="budgetMax" required>
+                  </div>
+                  <small class="form-text text-muted">Your monthly budget range in dollars</small>
+                </div>
+                <div class="form-group">
+                  <label>Desired Locations</label>
+                  <input type="text" class="form-control" placeholder="Enter preferred locations" [(ngModel)]="profileModel.desiredLocations" name="desiredLocations">
+                  <small class="form-text text-muted">Comma-separated list of areas you're interested in</small>
+                </div>
+                <div class="form-group">
+                  <label>Move-in Date</label>
+                  <input type="date" class="form-control" [(ngModel)]="profileModel.moveInDate" name="moveInDate">
+                  <small class="form-text text-muted">When you're planning to move in</small>
+                </div>
+              </div>
+
+              <div class="profile-section">
+                <h4>Compatibility Preferences</h4>
+                <div class="form-group">
+                  <label>Pet Friendly</label>
+                  <select class="form-control" [(ngModel)]="profileModel.petFriendly" name="petFriendly">
+                    <option>No Preference</option>
+                    <option>Yes</option>
+                    <option>No</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Smoking</label>
+                  <select class="form-control" [(ngModel)]="profileModel.smoking" name="smoking">
+                    <option>No Preference</option>
+                    <option>Smoking Allowed</option>
+                    <option>No Smoking</option>
+                    <option>Smoking Preferred</option>
+                    <option>Smoking Required</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Gender Preference</label>
+                  <select class="form-control" [(ngModel)]="profileModel.genderPreference" name="genderPreference">
+                    <option>No Preference</option>
+                    <option>Male Only</option>
+                    <option>Female Only</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="profile-actions">
+              <button class="btn btn-primary" (click)="saveProfileChanges()" [disabled]="isLoading">
+                <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                {{ isLoading ? 'Saving...' : 'Save Changes' }}
+              </button>
+              <button class="btn btn-secondary" (click)="setActiveSection('overview')" [disabled]="isLoading">Cancel</button>
+            </div>
+
+            <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+              {{ errorMessage }}
+            </div>
+          </div>
+        </section>
+
+        <!-- Matches Section -->
+        <section class="dashboard-section" [class.active]="activeSection === 'matches'">
+          <div class="section-header">
+            <h2><i class="fas fa-handshake"></i> My Matches</h2>
+          </div>
+
+          <div class="no-data">
+            <p>You don't have any matches yet. Start browsing properties and express interest to get matches!</p>
+            <button class="btn btn-primary" (click)="$event.preventDefault(); navigateToPropertySwipe()">Browse Properties</button>
+          </div>
+        </section>
+
+        <!-- Messages Section -->
+        <section class="dashboard-section" [class.active]="activeSection === 'messages'">
+          <div class="section-header">
+            <h2><i class="fas fa-comments"></i> Messages</h2>
+          </div>
+
+          <div class="no-data">
+            <p>You don't have any messages yet. Messages will appear here once you match with property owners or roommate hosts.</p>
+          </div>
+        </section>
+
+        <!-- Appointments Section -->
+        <section class="dashboard-section" [class.active]="activeSection === 'appointments'">
+          <div class="section-header">
+            <h2><i class="fas fa-calendar-alt"></i> Visits & Appointments</h2>
+          </div>
+
+          <div class="no-data">
+            <p>You don't have any scheduled visits or appointments yet. Schedule a visit to a property you're interested in!</p>
+            <button class="btn btn-primary" (click)="$event.preventDefault(); navigateToPropertySwipe()">Browse Properties</button>
+          </div>
+        </section>
+
+        <!-- Reviews Section -->
+        <section class="dashboard-section" [class.active]="activeSection === 'reviews'">
+          <div class="section-header">
+            <h2><i class="fas fa-star"></i> Reviews & Ratings</h2>
+          </div>
+
+          <div class="no-data">
+            <p>You haven't submitted any reviews yet. After visiting a property or interacting with an owner, you can leave a review here.</p>
+          </div>
+        </section>
       </div>
     </main>
   </div>

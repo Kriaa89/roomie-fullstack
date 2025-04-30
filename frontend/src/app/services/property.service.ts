@@ -43,8 +43,52 @@ export class PropertyService {
     return this.apiService.deleteProperty(propertyId);
   }
 
+  // Toggle property availability
+  toggleAvailability(propertyId: number): Observable<any> {
+    return this.apiService.togglePropertyAvailability(propertyId);
+  }
+
   // Get my properties (for owners)
   getMyProperties(): Observable<any> {
     return this.apiService.getMyProperties();
+  }
+
+  // Visit request methods
+  requestVisit(propertyId: number, visitRequestData: any): Observable<any> {
+    return this.apiService.createVisitRequest(propertyId, visitRequestData);
+  }
+
+  getMyVisitRequests(): Observable<any> {
+    return this.apiService.getMyVisitRequests();
+  }
+
+  getPropertyVisitRequests(propertyId: number): Observable<any> {
+    return this.apiService.getPropertyVisitRequests(propertyId);
+  }
+
+  updateVisitRequestStatus(requestId: number, status: string): Observable<any> {
+    return this.apiService.updateVisitRequestStatus(requestId, status);
+  }
+
+  // Express interest in a property
+  expressInterest(propertyId: number): Observable<any> {
+    return this.apiService.submitRentalRequest(propertyId, { requestType: 'interest' });
+  }
+
+  // Schedule a visit to a property
+  scheduleVisit(propertyId: number, visitDate: string): Observable<any> {
+    return this.apiService.submitRentalRequest(propertyId, {
+      requestType: 'visit',
+      visitDate: visitDate
+    });
+  }
+
+  // Roommate host specific methods
+  createRoomListing(roomData: any): Observable<any> {
+    return this.apiService.createRoomListing(roomData);
+  }
+
+  getRoomListings(): Observable<any> {
+    return this.apiService.getRoomListings();
   }
 }

@@ -1,6 +1,6 @@
 package com.backend.roomie.controllers;
 
-import com.backend.roomie.models.PropretyList;
+import com.backend.roomie.models.PropertyList;
 import com.backend.roomie.services.PropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,7 @@ public class OwnerController {
     @GetMapping("/properties")
     public ResponseEntity<?> getMyProperties() {
         try {
-            List<PropretyList> properties = propertyService.getPropertiesByCurrentUser();
+            List<PropertyList> properties = propertyService.getPropertiesByCurrentUser();
             return ResponseEntity.ok(properties);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
@@ -46,7 +46,7 @@ public class OwnerController {
     @GetMapping("/properties/{id}")
     public ResponseEntity<?> getMyPropertyById(@PathVariable Long id) {
         try {
-            PropretyList property = propertyService.getPropertyById(id);
+            PropertyList property = propertyService.getPropertyById(id);
 
             // Verify ownership
             if (!property.getOwner().getId().equals(propertyService.getPropertiesByCurrentUser().get(0).getOwner().getId())) {
@@ -66,9 +66,9 @@ public class OwnerController {
      * @return created property
      */
     @PostMapping("/properties")
-    public ResponseEntity<?> createProperty(@RequestBody PropretyList property) {
+    public ResponseEntity<?> createProperty(@RequestBody PropertyList property) {
         try {
-            PropretyList createdProperty = propertyService.createProperty(property);
+            PropertyList createdProperty = propertyService.createProperty(property);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdProperty);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -85,7 +85,7 @@ public class OwnerController {
     @PutMapping("/properties/{id}")
     public ResponseEntity<?> updateProperty(@PathVariable Long id, @RequestBody Map<String, Object> propertyDetails) {
         try {
-            PropretyList updatedProperty = propertyService.updateProperty(id, propertyDetails);
+            PropertyList updatedProperty = propertyService.updateProperty(id, propertyDetails);
             return ResponseEntity.ok(updatedProperty);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

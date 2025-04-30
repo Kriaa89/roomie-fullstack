@@ -173,6 +173,11 @@ public class AuthenticationService {
             throw new IllegalArgumentException("User already has this role");
         }
 
+        // Clear the roles collection and delete from database
+        List<UserRole> existingRoles = new ArrayList<>(user.getRoles());
+        user.getRoles().clear();
+        userRoleRepository.deleteAll(existingRoles);
+
         // Create new role
         UserRole role = new UserRole();
         role.setUser(user);
@@ -182,6 +187,10 @@ public class AuthenticationService {
 
         // Save role
         userRoleRepository.save(role);
+
+        // Add the new role to the user's roles collection
+        user.getRoles().add(role);
+        userRepository.save(user);
 
         // Refresh user to get updated roles
         User updatedUser = userRepository.findById(userId).orElseThrow();

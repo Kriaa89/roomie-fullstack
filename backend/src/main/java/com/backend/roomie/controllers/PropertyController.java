@@ -1,12 +1,15 @@
 package com.backend.roomie.controllers;
 
-import com.backend.roomie.models.PropretyList;
+import com.backend.roomie.models.PropertyList;
 import com.backend.roomie.services.PropertyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +30,7 @@ public class PropertyController {
      * @return list of properties
      */
     @GetMapping
-    public ResponseEntity<List<PropretyList>> getAllProperties() {
+    public ResponseEntity<List<PropertyList>> getAllProperties() {
         return ResponseEntity.ok(propertyService.getAllProperties());
     }
 
@@ -40,10 +43,13 @@ public class PropertyController {
     @GetMapping("/{id}")
     public ResponseEntity<?> getPropertyById(@PathVariable Long id) {
         try {
-            PropretyList property = propertyService.getPropertyById(id);
+            PropertyList property = propertyService.getPropertyById(id);
             return ResponseEntity.ok(property);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body("Failed to retrieve property. Error: " + e.getMessage());
         }
     }
 
@@ -56,10 +62,13 @@ public class PropertyController {
     @GetMapping("/owner/{ownerId}")
     public ResponseEntity<?> getPropertiesByOwner(@PathVariable Long ownerId) {
         try {
-            List<PropretyList> properties = propertyService.getPropertiesByOwner(ownerId);
+            List<PropertyList> properties = propertyService.getPropertiesByOwner(ownerId);
             return ResponseEntity.ok(properties);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body("Failed to retrieve properties. Error: " + e.getMessage());
         }
     }
 
@@ -72,10 +81,13 @@ public class PropertyController {
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<?> getMyProperties() {
         try {
-            List<PropretyList> properties = propertyService.getPropertiesByCurrentUser();
+            List<PropertyList> properties = propertyService.getPropertiesByCurrentUser();
             return ResponseEntity.ok(properties);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body("Failed to retrieve your properties. Error: " + e.getMessage());
         }
     }
 
@@ -85,7 +97,7 @@ public class PropertyController {
      * @return list of available properties
      */
     @GetMapping("/available")
-    public ResponseEntity<List<PropretyList>> getAvailableProperties() {
+    public ResponseEntity<List<PropertyList>> getAvailableProperties() {
         return ResponseEntity.ok(propertyService.getAvailableProperties());
     }
 
@@ -96,7 +108,7 @@ public class PropertyController {
      * @return list of properties
      */
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<PropretyList>> getPropertiesByType(@PathVariable String type) {
+    public ResponseEntity<List<PropertyList>> getPropertiesByType(@PathVariable String type) {
         return ResponseEntity.ok(propertyService.getPropertiesByType(type));
     }
 
@@ -107,7 +119,7 @@ public class PropertyController {
      * @return list of properties
      */
     @GetMapping("/location/{location}")
-    public ResponseEntity<List<PropretyList>> getPropertiesByLocation(@PathVariable String location) {
+    public ResponseEntity<List<PropertyList>> getPropertiesByLocation(@PathVariable String location) {
         return ResponseEntity.ok(propertyService.getPropertiesByLocation(location));
     }
 
@@ -115,16 +127,32 @@ public class PropertyController {
      * Create property
      * 
      * @param property property data
+     * @param bindingResult validation result
      * @return created property
      */
     @PostMapping
     @PreAuthorize("hasRole('OWNER')")
-    public ResponseEntity<?> createProperty(@RequestBody PropretyList property) {
+    public ResponseEntity<?> createProperty(@Valid @RequestBody PropertyList property, BindingResult bindingResult) {
+        // Check for validation errors
+        if (bindingResult.hasErrors()) {
+            StringBuilder errorMessage = new StringBuilder("Validation errors: ");
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                errorMessage.append(error.getField())
+                           .append(" - ")
+                           .append(error.getDefaultMessage())
+                           .append("; ");
+            }
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage.toString());
+        }
+
         try {
-            PropretyList createdProperty = propertyService.createProperty(property);
+            PropertyList createdProperty = propertyService.createProperty(property);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdProperty);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body("Failed to create property. Please try again. Error: " + e.getMessage());
         }
     }
 
@@ -139,10 +167,20 @@ public class PropertyController {
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<?> updateProperty(@PathVariable Long id, @RequestBody Map<String, Object> propertyDetails) {
         try {
-            PropretyList updatedProperty = propertyService.updateProperty(id, propertyDetails);
+            PropertyList updatedProperty = propertyService.updateProperty(id, propertyDetails);
             return ResponseEntity.ok(updatedProperty);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            // Determine the appropriate status code based on the error message
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            } else if (e.getMessage().contains("permission")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body("Failed to update property. Error: " + e.getMessage());
         }
     }
 
@@ -159,7 +197,38 @@ public class PropertyController {
             propertyService.deleteProperty(id);
             return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            // Determine the appropriate status code based on the error message
+            if (e.getMessage().contains("not found")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+            } else if (e.getMessage().contains("permission")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body("Failed to delete property. Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Toggle property availability
+     * 
+     * @param id property ID
+     * @return updated property
+     */
+    @PutMapping("/{id}/toggle-availability")
+    @PreAuthorize("hasRole('OWNER')")
+    public ResponseEntity<?> togglePropertyAvailability(@PathVariable Long id) {
+        try {
+            // Let the service handle the toggle operation
+            PropertyList updatedProperty = propertyService.togglePropertyAvailability(id);
+            return ResponseEntity.ok(updatedProperty);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                   .body("Failed to toggle property availability. Error: " + e.getMessage());
         }
     }
 }

@@ -7,16 +7,12 @@
       <p>No roles are available at the moment. Redirecting to dashboard...</p>
     </div>
 
-    <div *ngIf="availableRoles.length > 0 && currentRoles.length === availableRoles.length" class="no-roles-message">
-      <p>You already have all available roles. You can still view the roles below.</p>
-    </div>
-
     <div *ngIf="availableRoles.length > 0" class="roles-grid">
       <div
         *ngFor="let role of availableRoles"
         class="role-card"
         [class.selected]="selectedRole === role.type"
-        [class.already-assigned]="currentRoles.includes(role.type)"
+        [class.disabled]="currentRoles.includes(role.type)"
         (click)="selectRole(role.type)"
       >
         <div class="role-icon">
@@ -26,7 +22,9 @@
         </div>
         <h3>{{ role.title }}</h3>
         <p>{{ role.description }}</p>
-        <div *ngIf="currentRoles.includes(role.type)" class="role-badge">Already assigned</div>
+        <div *ngIf="currentRoles.includes(role.type)" class="current-role-badge">
+          Current Role
+        </div>
       </div>
     </div>
 
@@ -37,7 +35,7 @@
     <div class="actions">
       <button
         class="btn btn-primary"
-        [disabled]="!selectedRole || isLoading || (selectedRole && currentRoles.includes(selectedRole))"
+        [disabled]="!selectedRole || isLoading"
         (click)="confirmSelection()"
       >
         <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

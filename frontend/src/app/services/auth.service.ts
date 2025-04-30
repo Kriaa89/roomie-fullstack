@@ -71,6 +71,9 @@ export class AuthService {
   private setSession(authResult: any): void {
     localStorage.setItem('token', authResult.token);
 
+    console.log('Auth result:', authResult);
+    console.log('Auth result roles:', authResult.roles);
+
     const user = {
       id: authResult.userId,
       email: authResult.email,
@@ -79,6 +82,7 @@ export class AuthService {
       roles: authResult.roles
     };
 
+    console.log('User object to be stored:', user);
     localStorage.setItem('user', JSON.stringify(user));
     this.currentUserSubject.next(user);
     this.isAuthenticatedSubject.next(true);
@@ -97,15 +101,34 @@ export class AuthService {
   getCurrentUser(): Observable<any> {
     return this.apiService.getCurrentUser().pipe(
       tap(user => {
+        console.log('getCurrentUser response:', user);
         const currentUser = this.currentUserSubject.value;
+        console.log('Current user before update:', currentUser);
+
         if (currentUser) {
+          console.log('User roles from API:', user.roles);
+
+          // Check if roles is an array of objects or strings
+          let mappedRoles;
+          if (user.roles && user.roles.length > 0 && typeof user.roles[0] === 'object') {
+            console.log('Mapping roles from objects to strings');
+            mappedRoles = user.roles.map((role: any) => role.roleType);
+          } else {
+            console.log('Roles are already strings');
+            mappedRoles = user.roles;
+          }
+
+          console.log('Mapped roles:', mappedRoles);
+
           // Update only user data, not auth info
           const updatedUser = {
             ...currentUser,
             firstName: user.firstName,
             lastName: user.lastName,
-            roles: user.roles.map((role: any) => role.roleType)
+            roles: mappedRoles
           };
+
+          console.log('Updated user:', updatedUser);
           this.currentUserSubject.next(updatedUser);
           localStorage.setItem('user', JSON.stringify(updatedUser));
         }
@@ -116,6 +139,30 @@ export class AuthService {
   // Check if user has a specific role
   hasRole(role: string): boolean {
     const user = this.currentUserSubject.value;
-    return user && user.roles && user.roles.includes(role);
+    console.log('Checking if user has role:', role);
+    console.log('User:', user);
+    if (user && user.roles) {
+      console.log('User roles:', user.roles);
+      const hasRole = user.roles.includes(role);
+      console.log(`User has role ${role}: ${hasRole}`);
+      return hasRole;
+    }
+    console.log('User has no roles');
+    return false;
+  }
+
+  // Update current user with new data
+  updateCurrentUser(userData: any): void {
+    const currentUser = this.currentUserSubject.value;
+    if (currentUser) {
+      // Preserve roles from current user if not provided in userData
+      if (!userData.roles && currentUser.roles) {
+        userData.roles = currentUser.roles;
+      }
+
+      // Update the current user
+      this.currentUserSubject.next(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+    }
   }
 }

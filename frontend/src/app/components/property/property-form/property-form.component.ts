@@ -4,7 +4,16 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PropertyService } from '../../../services/property.service';
 import { AuthService } from '../../../services/auth.service';
-import { Property, PropertyType } from '../../../models/property.model';
+
+// Define PropertyType enum directly in this file since the model has been deleted
+export enum PropertyType {
+  APARTMENT = 'APARTMENT',
+  HOUSE = 'HOUSE',
+  CONDO = 'CONDO',
+  TOWNHOUSE = 'TOWNHOUSE',
+  STUDIO = 'STUDIO',
+  OTHER = 'OTHER'
+}
 
 @Component({
   selector: 'app-property-form',
@@ -14,18 +23,12 @@ import { Property, PropertyType } from '../../../models/property.model';
   styleUrls: ['./property-form.component.css']
 })
 export class PropertyFormComponent implements OnInit {
-  @ViewChild('fileInput') fileInput!: ElementRef;
-
   propertyForm: FormGroup;
   propertyId: number | null = null;
   isEditMode: boolean = false;
   isLoading: boolean = false;
   errorMessage: string = '';
   propertyTypes = Object.values(PropertyType);
-
-  selectedFiles: File[] = [];
-  previewUrls: string[] = [];
-  uploadProgress: number = 0;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -62,7 +65,6 @@ export class PropertyFormComponent implements OnInit {
       location: ['', [Validators.required]],
       price: ['', [Validators.required]],
       description: ['', [Validators.required]],
-      images: ['', [Validators.required]],
       amenities: [''],
       surface: [''],
       numberOfRooms: [null],
@@ -81,7 +83,7 @@ export class PropertyFormComponent implements OnInit {
     this.errorMessage = '';
 
     this.propertyService.getPropertyById(this.propertyId).subscribe({
-      next: (property: Property) => {
+      next: (property: any) => {
         this.isLoading = false;
         this.propertyForm.patchValue({
           name: property.name,
@@ -89,7 +91,6 @@ export class PropertyFormComponent implements OnInit {
           location: property.location,
           price: property.price,
           description: property.description,
-          images: property.images,
           amenities: property.amenities,
           surface: property.surface,
           numberOfRooms: property.numberOfRooms,
@@ -100,15 +101,6 @@ export class PropertyFormComponent implements OnInit {
           audiance: property.audiance
         });
 
-        // Load existing images for preview
-        if (property.images) {
-          const imageUrls = property.images.split(',');
-          this.previewUrls = imageUrls;
-
-          // For demonstration purposes, we're not actually loading the files
-          // In a real application, you would need to fetch the files from the server
-          // or create File objects from the URLs if possible
-        }
       },
       error: (error) => {
         this.isLoading = false;
@@ -118,7 +110,7 @@ export class PropertyFormComponent implements OnInit {
     });
   }
 
-  async onSubmit(): Promise<void> {
+  onSubmit(): void {
     if (this.propertyForm.invalid) {
       // Mark all fields as touched to trigger validation messages
       Object.keys(this.propertyForm.controls).forEach(key => {
@@ -128,34 +120,15 @@ export class PropertyFormComponent implements OnInit {
       return;
     }
 
+
     this.isLoading = true;
     this.errorMessage = '';
 
-    try {
-      // Upload files and get URLs
-      const uploadedUrls = await this.uploadFiles();
-
-      // Update the form value with the uploaded image URLs
-      if (uploadedUrls.length > 0) {
-        this.propertyForm.patchValue({
-          images: uploadedUrls.join(',')
-        });
-      }
-
-      // Submit the form
-      if (this.isEditMode && this.propertyId) {
-        this.updateProperty();
-      } else {
-        this.createProperty();
-      }
-    } catch (error: any) {
-      this.isLoading = false;
-      if (error.message && error.message.includes('Please select at least one image')) {
-        this.errorMessage = error.message;
-      } else {
-        this.errorMessage = 'Failed to upload images. Please try again.';
-      }
-      console.error('Error uploading images:', error);
+    // Submit the form
+    if (this.isEditMode && this.propertyId) {
+      this.updateProperty();
+    } else {
+      this.createProperty();
     }
   }
 
@@ -205,97 +178,4 @@ export class PropertyFormComponent implements OnInit {
     }
   }
 
-  // File handling methods
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files) {
-      // Clear previous selections
-      this.selectedFiles = [];
-      this.previewUrls = [];
-
-      // Add new files
-      for (let i = 0; i < input.files.length; i++) {
-        const file = input.files[i];
-        if (this.isValidImageFile(file)) {
-          this.selectedFiles.push(file);
-          this.createImagePreview(file);
-        } else {
-          this.errorMessage = 'Please select valid image files (jpg, jpeg, png, gif)';
-        }
-      }
-
-      // Update the images form control
-      if (this.selectedFiles.length > 0) {
-        // Set a temporary value to satisfy the validator
-        this.propertyForm.get('images')?.setValue('temp');
-        this.propertyForm.get('images')?.markAsTouched();
-      } else {
-        this.propertyForm.get('images')?.setValue('');
-        this.propertyForm.get('images')?.markAsTouched();
-      }
-    }
-  }
-
-  isValidImageFile(file: File): boolean {
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-    return validTypes.includes(file.type);
-  }
-
-  createImagePreview(file: File): void {
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.previewUrls.push(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  }
-
-  removeFile(index: number): void {
-    this.selectedFiles.splice(index, 1);
-    this.previewUrls.splice(index, 1);
-
-    // Update the images form control
-    if (this.selectedFiles.length > 0) {
-      // Set a temporary value to satisfy the validator
-      this.propertyForm.get('images')?.setValue('temp');
-    } else {
-      this.propertyForm.get('images')?.setValue('');
-    }
-    this.propertyForm.get('images')?.markAsTouched();
-  }
-
-  triggerFileInput(): void {
-    this.fileInput.nativeElement.click();
-  }
-
-  // This method will be called before form submission to handle file uploads
-  async uploadFiles(): Promise<string[]> {
-    if (this.selectedFiles.length === 0) {
-      // If no new files selected, check if we have existing images
-      const existingImages = this.propertyForm.get('images')?.value;
-      if (existingImages) {
-        return existingImages.split(',');
-      } else {
-        // No files selected and no existing images
-        throw new Error('Please select at least one image for the property');
-      }
-    }
-
-    const uploadedUrls: string[] = [];
-
-    // In a real application, you would upload each file to a server
-    // For this example, we'll simulate the upload and return data URLs
-    for (let i = 0; i < this.selectedFiles.length; i++) {
-      // Simulate upload progress
-      this.uploadProgress = Math.round(((i + 1) / this.selectedFiles.length) * 100);
-
-      // In a real app, you would call a service to upload the file
-      // For now, we'll just use the preview URLs
-      uploadedUrls.push(this.previewUrls[i]);
-
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    return uploadedUrls;
-  }
 }

@@ -27,7 +27,7 @@ public class Swipe {
     // The property that was swiped on (for user-to-property swiping)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id")
-    private PropretyList propertyList;
+    private PropertyList propertyList;
 
     // Status of the swipe (LEFT or RIGHT)
     @Enumerated(EnumType.STRING)
@@ -87,11 +87,11 @@ public class Swipe {
         this.targetUser = targetUser;
     }
 
-    public PropretyList getPropertyList() {
+    public PropertyList getPropertyList() {
         return propertyList;
     }
 
-    public void setPropertyList(PropretyList propertyList) {
+    public void setPropertyList(PropertyList propertyList) {
         this.propertyList = propertyList;
     }
 

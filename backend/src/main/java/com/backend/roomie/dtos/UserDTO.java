@@ -31,10 +31,26 @@ public class UserDTO {
     private Boolean idVerified;
     private Date createdAt;
     private Date updatedAt;
-    
+
+    // Profile Information
+    private String city;
+    private String occupation;
+    private String bio;
+
+    // Rental Preferences
+    private String budgetMin;
+    private String budgetMax;
+    private String desiredLocations;
+    private String moveInDate;
+
+    // Compatibility Preferences
+    private String petFriendly;
+    private String smoking;
+    private String genderPreference;
+
     // Include roles but not password or other sensitive data
     private List<String> roles;
-    
+
     /**
      * Static method to convert UserRole list to role name list
      * 

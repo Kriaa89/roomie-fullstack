@@ -38,10 +38,13 @@ export class LoginComponent {
     this.authService.login(this.loginForm.value).subscribe({
       next: (response) => {
         this.isLoading = false;
+        console.log('Login response:', response);
         // Check if user has roles
         if (response.roles && response.roles.length > 0) {
+          console.log('User has roles:', response.roles);
           this.router.navigate(['/dashboard']);
         } else {
+          console.log('User has no roles, redirecting to role selection');
           // If no roles, redirect to role selection
           this.router.navigate(['/select-role']);
         }

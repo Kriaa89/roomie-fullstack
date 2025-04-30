@@ -1,9 +1,11 @@
 package com.backend.roomie.services;
 
-import com.backend.roomie.models.PropretyList;
+import com.backend.roomie.models.PropertyList;
 import com.backend.roomie.models.User;
 import com.backend.roomie.repositories.PropertyRepository;
+import com.backend.roomie.repositories.SwipeRepository;
 import com.backend.roomie.repositories.UserRepository;
+import com.backend.roomie.repositories.VisitRequestsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,13 +22,15 @@ public class PropertyService {
 
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
+    private final VisitRequestsRepository visitRequestsRepository;
+    private final SwipeRepository swipeRepository;
 
     /**
      * Get all properties
      * 
      * @return list of properties
      */
-    public List<PropretyList> getAllProperties() {
+    public List<PropertyList> getAllProperties() {
         return propertyRepository.findAll();
     }
 
@@ -36,7 +40,7 @@ public class PropertyService {
      * @param id property ID
      * @return property
      */
-    public PropretyList getPropertyById(Long id) {
+    public PropertyList getPropertyById(Long id) {
         return propertyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
     }
@@ -47,7 +51,7 @@ public class PropertyService {
      * @param ownerId owner ID
      * @return list of properties
      */
-    public List<PropretyList> getPropertiesByOwner(Long ownerId) {
+    public List<PropertyList> getPropertiesByOwner(Long ownerId) {
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
         return propertyRepository.findByOwner(owner);
@@ -58,7 +62,7 @@ public class PropertyService {
      * 
      * @return list of properties
      */
-    public List<PropretyList> getPropertiesByCurrentUser() {
+    public List<PropertyList> getPropertiesByCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
@@ -73,7 +77,7 @@ public class PropertyService {
      * 
      * @return list of available properties
      */
-    public List<PropretyList> getAvailableProperties() {
+    public List<PropertyList> getAvailableProperties() {
         return propertyRepository.findByAvailability(true);
     }
 
@@ -83,7 +87,7 @@ public class PropertyService {
      * @param type property type
      * @return list of properties
      */
-    public List<PropretyList> getPropertiesByType(String type) {
+    public List<PropertyList> getPropertiesByType(String type) {
         return propertyRepository.findByType(type);
     }
 
@@ -93,7 +97,7 @@ public class PropertyService {
      * @param location property location
      * @return list of properties
      */
-    public List<PropretyList> getPropertiesByLocation(String location) {
+    public List<PropertyList> getPropertiesByLocation(String location) {
         return propertyRepository.findByLocationContaining(location);
     }
 
@@ -104,7 +108,7 @@ public class PropertyService {
      * @return created property
      */
     @Transactional
-    public PropretyList createProperty(PropretyList property) {
+    public PropertyList createProperty(PropertyList property) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
 
@@ -126,8 +130,8 @@ public class PropertyService {
      * @return updated property
      */
     @Transactional
-    public PropretyList updateProperty(Long id, Map<String, Object> propertyDetails) {
-        PropretyList property = propertyRepository.findById(id)
+    public PropertyList updateProperty(Long id, Map<String, Object> propertyDetails) {
+        PropertyList property = propertyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
 
         // Verify ownership
@@ -156,9 +160,6 @@ public class PropertyService {
         }
         if (propertyDetails.containsKey("description")) {
             property.setDescription((String) propertyDetails.get("description"));
-        }
-        if (propertyDetails.containsKey("images")) {
-            property.setImages((String) propertyDetails.get("images"));
         }
         if (propertyDetails.containsKey("amenities")) {
             property.setAmenities((String) propertyDetails.get("amenities"));
@@ -197,7 +198,7 @@ public class PropertyService {
      */
     @Transactional
     public void deleteProperty(Long id) {
-        PropretyList property = propertyRepository.findById(id)
+        PropertyList property = propertyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Property not found"));
 
         // Verify ownership
@@ -211,7 +212,18 @@ public class PropertyService {
             throw new IllegalArgumentException("You don't have permission to delete this property");
         }
 
-        propertyRepository.delete(property);
+        try {
+            // Delete related visit requests
+            visitRequestsRepository.deleteAll(visitRequestsRepository.findByPropertyList(property));
+
+            // Delete related swipes
+            swipeRepository.deleteAll(swipeRepository.findByPropertyList(property));
+
+            // Delete the property
+            propertyRepository.delete(property);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Failed to delete property. Please try again. Error: " + e.getMessage());
+        }
     }
 
     /**
@@ -248,5 +260,34 @@ public class PropertyService {
      */
     public long countAllProperties() {
         return propertyRepository.count();
+    }
+
+    /**
+     * Toggle property availability
+     * 
+     * @param id property ID
+     * @return updated property
+     */
+    @Transactional
+    public PropertyList togglePropertyAvailability(Long id) {
+        PropertyList property = propertyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Property not found"));
+
+        // Verify ownership
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!property.getOwner().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("You don't have permission to update this property");
+        }
+
+        // Toggle availability
+        property.setAvailability(!property.isAvailability());
+        property.setUpdatedAt(new Date());
+
+        return propertyRepository.save(property);
     }
 }

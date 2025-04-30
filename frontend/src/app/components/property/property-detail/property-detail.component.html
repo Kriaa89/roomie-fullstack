@@ -15,17 +15,6 @@
   </div>
 
   <div *ngIf="!isLoading && property" class="property-detail-card">
-    <div class="property-images">
-      <div *ngIf="property.images" class="image-container">
-        <img [src]="property.images.split(',')[0]" alt="{{ property.name }}" class="main-image">
-        <div *ngIf="property.images.split(',').length > 1" class="image-thumbnails">
-          <img *ngFor="let image of property.images.split(',').slice(1)" [src]="image" alt="{{ property.name }}" class="thumbnail">
-        </div>
-      </div>
-      <div *ngIf="!property.images" class="no-image">
-        <p>No images available</p>
-      </div>
-    </div>
 
     <div class="property-header">
       <h1>{{ property.name }}</h1>
@@ -36,6 +25,11 @@
 
     <div class="property-location">
       <i class="fas fa-map-marker-alt"></i> {{ property.location }}
+    </div>
+
+    <div class="property-map">
+      <h2>Location</h2>
+      <div id="map" class="map-container"></div>
     </div>
 
     <div class="property-price">
@@ -95,6 +89,39 @@
     <div class="property-owner" *ngIf="property.owner">
       <h2>Owner</h2>
       <p>{{ property.owner.firstName }} {{ property.owner.lastName }}</p>
+    </div>
+
+    <!-- AI-Powered Property Insights (only shown to non-owners) -->
+    <app-property-insights *ngIf="!isOwner" [property]="property" [user]="user"></app-property-insights>
+
+    <div class="property-visit" *ngIf="!isOwner && property.availability">
+      <h2>Request a Visit</h2>
+      <p>Select a date to visit this property:</p>
+      <div class="visit-form">
+        <div class="form-group">
+          <label for="visitDate">Visit Date</label>
+          <input
+            type="date"
+            id="visitDate"
+            class="form-control"
+            [min]="minDate"
+            [(ngModel)]="visitDate"
+            required>
+        </div>
+        <button class="btn btn-primary" (click)="requestVisit()" [disabled]="!visitDate || isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          <i *ngIf="!isLoading" class="fas fa-calendar-check"></i>
+          {{ isLoading ? 'Submitting...' : 'Request Visit' }}
+        </button>
+
+        <div *ngIf="visitRequestSuccess" class="alert alert-success mt-3">
+          <i class="fas fa-check-circle"></i> Visit request submitted successfully! The owner will review your request.
+        </div>
+
+        <div *ngIf="visitRequestError" class="alert alert-danger mt-3">
+          <i class="fas fa-exclamation-circle"></i> {{ visitRequestError }}
+        </div>
+      </div>
     </div>
 
     <div class="property-actions" *ngIf="isOwner">

@@ -57,12 +57,21 @@ h2 {
   box-shadow: 0 5px 15px rgba(74, 144, 226, 0.1);
 }
 
-.role-card.already-assigned {
+.role-card.already-assigned,
+.role-card.disabled {
   border-color: #28a745;
   position: relative;
+  opacity: 0.8;
+  cursor: not-allowed;
 }
 
-.role-badge {
+.role-card.disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.role-badge,
+.current-role-badge {
   position: absolute;
   top: 10px;
   right: 10px;

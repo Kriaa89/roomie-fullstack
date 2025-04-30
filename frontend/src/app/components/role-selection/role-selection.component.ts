@@ -17,6 +17,11 @@ export class RoleSelectionComponent implements OnInit {
     { type: 'RENTER', title: 'Renter', description: 'Search and rent properties' },
     { type: 'ROOMMATE_HOST', title: 'Roommate Host', description: 'Host roommates in your property' }
   ];
+  allRoles = [
+    { type: 'OWNER', title: 'Property Owner', description: 'List and manage your properties for rent' },
+    { type: 'RENTER', title: 'Renter', description: 'Search and rent properties' },
+    { type: 'ROOMMATE_HOST', title: 'Roommate Host', description: 'Host roommates in your property' }
+  ];
   selectedRole: string | null = null;
   errorMessage: string = '';
   isLoading: boolean = false;
@@ -34,15 +39,21 @@ export class RoleSelectionComponent implements OnInit {
         this.userId = user.id;
         this.currentRoles = user.roles || [];
 
-        // No longer filtering out roles the user already has
-        // Show all roles regardless of whether the user has them or not
+        console.log('Current roles:', this.currentRoles);
+
+        // Instead of filtering out roles the user already has, show all roles
+        // This ensures the RENTER role is always displayed
+        this.availableRoles = [...this.allRoles];
+        console.log('Available roles (showing all):', this.availableRoles);
 
         // Only redirect to dashboard if there are truly no roles available
         if (this.availableRoles.length === 0) {
+          console.log('No available roles, redirecting to dashboard');
           this.router.navigate(['/dashboard']);
         }
       } else {
         // If no user is logged in, redirect to login
+        console.log('No user logged in, redirecting to login');
         this.router.navigate(['/login']);
       }
     });
@@ -50,8 +61,9 @@ export class RoleSelectionComponent implements OnInit {
 
   selectRole(roleType: string): void {
     // Check if user already has this role
-    if (this.currentRoles.includes(roleType)) {
-      this.errorMessage = 'You already have this role assigned to your account.';
+    const hasRole = this.currentRoles.includes(roleType);
+    if (hasRole) {
+      this.errorMessage = `You already have the ${roleType} role. Please select a different role.`;
       return;
     }
 

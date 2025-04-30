@@ -2,6 +2,7 @@ package com.backend.roomie.models;
 
 
 import jakarta.persistence.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
 
@@ -19,12 +20,17 @@ public class VisitRequests {
         ACCEPTED,
         REJECTED
     }
+
     // visit date
     @Column(name = "visit_date")
+    @DateTimeFormat(pattern="yyyy-MM-dd")
     private Date visitDate;
 
     @Column(updatable=false)
+    @DateTimeFormat(pattern="yyyy-MM-dd")
     private Date createdAt;
+
+    @DateTimeFormat(pattern="yyyy-MM-dd")
     private Date updatedAt;
 
     // relation between the VisitRequest class and the User class
@@ -32,14 +38,25 @@ public class VisitRequests {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // relation between the VisitRequest class and the PropretyList class
+    // relation between the VisitRequest class and the PropertyList class
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "property_id")
-    private PropretyList propertyList;
+    private PropertyList propertyList;
 
     // Status field
     @Enumerated(EnumType.STRING)
     private Status status = Status.PENDING;
+
+    // Lifecycle methods
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = new Date();
+    }
 
     // No-args constructor
     public VisitRequests() {
@@ -94,11 +111,11 @@ public class VisitRequests {
         this.user = user;
     }
 
-    public PropretyList getPropertyList() {
+    public PropertyList getPropertyList() {
         return propertyList;
     }
 
-    public void setPropertyList(PropretyList propertyList) {
+    public void setPropertyList(PropertyList propertyList) {
         this.propertyList = propertyList;
     }
 }

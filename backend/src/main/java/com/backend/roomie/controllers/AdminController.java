@@ -1,7 +1,7 @@
 package com.backend.roomie.controllers;
 
 import com.backend.roomie.dtos.UserDTO;
-import com.backend.roomie.models.PropretyList;
+import com.backend.roomie.models.PropertyList;
 import com.backend.roomie.models.UserRole;
 import com.backend.roomie.services.PropertyService;
 import com.backend.roomie.services.UserService;
@@ -132,7 +132,7 @@ public class AdminController {
      * @return list of properties
      */
     @GetMapping("/properties")
-    public ResponseEntity<List<PropretyList>> getAllProperties() {
+    public ResponseEntity<List<PropertyList>> getAllProperties() {
         return ResponseEntity.ok(propertyService.getAllProperties());
     }
 
@@ -145,7 +145,7 @@ public class AdminController {
     @GetMapping("/properties/{id}")
     public ResponseEntity<?> getPropertyById(@PathVariable Long id) {
         try {
-            PropretyList property = propertyService.getPropertyById(id);
+            PropertyList property = propertyService.getPropertyById(id);
             return ResponseEntity.ok(property);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());

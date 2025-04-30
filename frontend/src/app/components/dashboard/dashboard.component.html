@@ -11,12 +11,6 @@
 
   <div class="dashboard-content">
     <div class="sidebar">
-      <div class="user-roles" *ngIf="user && user.roles">
-        <h3>Your Roles</h3>
-        <ul class="roles-list">
-          <li *ngFor="let role of user.roles" class="role-badge">{{ role }}</li>
-        </ul>
-      </div>
 
       <nav class="dashboard-nav">
         <h3>Navigation</h3>
@@ -84,10 +78,7 @@
 
         <div *ngIf="!isLoading && properties.length > 0" class="properties-grid">
           <div *ngFor="let property of properties" class="property-card" (click)="property.id && viewProperty(property.id)">
-            <div class="property-image">
-              <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
-              <div class="property-badge" *ngIf="property.availability">Available</div>
-            </div>
+            <div class="property-badge" *ngIf="property.availability">Available</div>
             <div class="property-details">
               <h3>{{ property.name }}</h3>
               <p class="property-location">
@@ -116,11 +107,8 @@
 
         <div *ngIf="!isLoading && myProperties.length > 0" class="properties-grid">
           <div *ngFor="let property of myProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
-            <div class="property-image">
-              <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
-              <div class="property-badge" [ngClass]="{'available': property.availability, 'unavailable': !property.availability}">
-                {{ property.availability ? 'Available' : 'Not Available' }}
-              </div>
+            <div class="property-badge" [ngClass]="{'available': property.availability, 'unavailable': !property.availability}">
+              {{ property.availability ? 'Available' : 'Not Available' }}
             </div>
             <div class="property-details">
               <h3>{{ property.name }}</h3>
@@ -152,10 +140,7 @@
 
         <div *ngIf="!isLoading && availableProperties.length > 0" class="properties-grid">
           <div *ngFor="let property of availableProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
-            <div class="property-image">
-              <img [src]="property.images ? property.images.split(',')[0] : 'assets/placeholder.jpg'" alt="{{ property.name }}">
-              <div class="property-badge available">Available</div>
-            </div>
+            <div class="property-badge available">Available</div>
             <div class="property-details">
               <h3>{{ property.name }}</h3>
               <p class="property-location">

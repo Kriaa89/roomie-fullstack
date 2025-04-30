@@ -1,6 +1,5 @@
 package com.backend.roomie.models;
 
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
@@ -26,20 +25,20 @@ public class User {
 
     // No-args constructor
     public User() {
+        // Initialize collections to prevent NullPointerExceptions
+        this.skills = new ArrayList<>();
+        this.swipesInitiated = new ArrayList<>();
+        this.swipesReceived = new ArrayList<>();
+        this.matchesAsUser1 = new ArrayList<>();
+        this.matchesAsUser2 = new ArrayList<>();
+        this.notifications = new ArrayList<>();
+        this.roles = new ArrayList<>();
     }
 
     // first name
     @NotEmpty(message = "First name is required")
     @Size(min = 3, message = "First name must be at least 3 characters long")
     private String firstName;
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
 
     // age
     @NotNull(message = "Age is required")
@@ -77,9 +76,28 @@ public class User {
     @NotEmpty(message = "Location is required")
     private String location;
 
+    // - **Profile Information**
+    private String city;
+    private String occupation;
+    private String bio;
+
+    // - **Rental Preferences**
+    private String budgetMin;
+    private String budgetMax;
+    private String desiredLocations;
+    private String moveInDate;
+
+    // - **Compatibility Preferences**
+    private String petFriendly;
+    private String smoking;
+    private String genderPreference;
+
     // - **Account Verification Status** (email verified, phone verified, ID verified)
+    @Builder.Default
     private Boolean emailVerified = false;
+    @Builder.Default
     private Boolean phoneVerified = false;
+    @Builder.Default
     private Boolean idVerified = false;
 
     // This will not allow the createdAt column to be updated after creation
@@ -88,6 +106,17 @@ public class User {
     private Date createdAt;
     @DateTimeFormat(pattern="yyyy-MM-dd")
     private Date updatedAt;
+
+    // Lifecycle methods
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = new Date();
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="admin_id")
@@ -146,6 +175,14 @@ public class User {
         this.lastName = lastName;
     }
 
+    public Integer getAge() {
+        return age;
+    }
+
+    public void setAge(Integer age) {
+        this.age = age;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -192,6 +229,86 @@ public class User {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getOccupation() {
+        return occupation;
+    }
+
+    public void setOccupation(String occupation) {
+        this.occupation = occupation;
+    }
+
+    public String getBio() {
+        return bio;
+    }
+
+    public void setBio(String bio) {
+        this.bio = bio;
+    }
+
+    public String getBudgetMin() {
+        return budgetMin;
+    }
+
+    public void setBudgetMin(String budgetMin) {
+        this.budgetMin = budgetMin;
+    }
+
+    public String getBudgetMax() {
+        return budgetMax;
+    }
+
+    public void setBudgetMax(String budgetMax) {
+        this.budgetMax = budgetMax;
+    }
+
+    public String getDesiredLocations() {
+        return desiredLocations;
+    }
+
+    public void setDesiredLocations(String desiredLocations) {
+        this.desiredLocations = desiredLocations;
+    }
+
+    public String getMoveInDate() {
+        return moveInDate;
+    }
+
+    public void setMoveInDate(String moveInDate) {
+        this.moveInDate = moveInDate;
+    }
+
+    public String getPetFriendly() {
+        return petFriendly;
+    }
+
+    public void setPetFriendly(String petFriendly) {
+        this.petFriendly = petFriendly;
+    }
+
+    public String getSmoking() {
+        return smoking;
+    }
+
+    public void setSmoking(String smoking) {
+        this.smoking = smoking;
+    }
+
+    public String getGenderPreference() {
+        return genderPreference;
+    }
+
+    public void setGenderPreference(String genderPreference) {
+        this.genderPreference = genderPreference;
     }
 
     public Boolean getEmailVerified() {
