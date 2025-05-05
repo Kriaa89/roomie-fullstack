@@ -1,0 +1,117 @@
+<div class="property-detail-container">
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading property details...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Property Details -->
+  <div *ngIf="!loading && !error && property" class="property-content">
+    <!-- Back Button -->
+    <div class="back-navigation">
+      <a [routerLink]="['/properties']" class="back-button">
+        <i class="icon-back"></i> Back to Properties
+      </a>
+    </div>
+
+    <!-- Property Header -->
+    <div class="property-header">
+      <h1>{{ property.name }}</h1>
+      <div class="property-location">
+        <i class="icon-location"></i> {{ property.location }}
+      </div>
+    </div>
+
+    <!-- Image Gallery -->
+    <div class="property-gallery">
+      <div class="gallery-container">
+        <img [src]="imageUrls[currentImageIndex] || 'assets/images/default-property.png'" alt="{{ property.name }}" class="gallery-image">
+
+        <div *ngIf="imageUrls.length > 1" class="gallery-controls">
+          <button (click)="prevImage()" class="gallery-control prev">
+            <i class="icon-prev"></i>
+          </button>
+          <button (click)="nextImage()" class="gallery-control next">
+            <i class="icon-next"></i>
+          </button>
+        </div>
+
+        <div class="gallery-indicators" *ngIf="imageUrls.length > 1">
+          <span *ngFor="let url of imageUrls; let i = index"
+                [class.active]="i === currentImageIndex"
+                (click)="currentImageIndex = i">
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Property Info -->
+    <div class="property-info-container">
+      <div class="property-main-info">
+        <div class="property-price">{{ property.price }}</div>
+        <div class="property-type">{{ property.type }}</div>
+        <div class="property-audience">For {{ property.audiance }}</div>
+
+        <div class="property-specs">
+          <div class="spec-item">
+            <i class="icon-bed"></i>
+            <span>{{ property.numberOfBedrooms }} Bedrooms</span>
+          </div>
+          <div class="spec-item">
+            <i class="icon-bath"></i>
+            <span>{{ property.numberOfBathrooms }} Bathrooms</span>
+          </div>
+          <div class="spec-item">
+            <i class="icon-size"></i>
+            <span>{{ property.surface }}</span>
+          </div>
+          <div class="spec-item">
+            <i class="icon-rooms"></i>
+            <span>{{ property.numberOfRooms }} Rooms</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="property-owner-info">
+        <h3>Property Owner</h3>
+        <div class="owner-details">
+          <div class="owner-name">{{ property.owner.firstName }} {{ property.owner.lastName }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Property Description -->
+    <div class="property-description">
+      <h2>Description</h2>
+      <p>{{ property.description }}</p>
+    </div>
+
+    <!-- Property Amenities -->
+    <div class="property-amenities">
+      <h2>Amenities</h2>
+      <div class="amenities-list">
+        <div *ngFor="let amenity of property.amenities.split(',')" class="amenity-item">
+          <i class="icon-check"></i>
+          <span>{{ amenity.trim() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Property Rules -->
+    <div class="property-rules">
+      <h2>House Rules</h2>
+      <p>{{ property.propertyRules }}</p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="property-actions">
+      <button *ngIf="isRenter" (click)="requestVisit()" class="btn-primary">Request a Visit</button>
+      <button *ngIf="isOwner" (click)="editProperty()" class="btn-secondary">Edit Property</button>
+    </div>
+  </div>
+</div>

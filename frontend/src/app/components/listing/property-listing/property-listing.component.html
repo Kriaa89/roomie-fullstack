@@ -1,0 +1,53 @@
+<div class="property-listing-container">
+  <div class="listing-header">
+    <h1>Available Properties</h1>
+    <div class="search-container">
+      <input
+        type="text"
+        placeholder="Search properties..."
+        class="search-input"
+        #searchInput
+        (keyup.enter)="filterProperties(searchInput.value)"
+      >
+      <button class="search-button" (click)="filterProperties(searchInput.value)">Search</button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading properties...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Properties Grid -->
+  <div *ngIf="!loading && !error" class="properties-grid">
+    <div *ngIf="properties.length === 0" class="empty-state">
+      <p>No properties found. Try adjusting your search criteria.</p>
+    </div>
+
+    <div *ngFor="let property of properties" class="property-card">
+      <div class="property-image">
+        <img [src]="property.images.split(',')[0] || 'assets/images/default-property.png'" alt="{{ property.name }}">
+      </div>
+      <div class="property-details">
+        <h2>{{ property.name }}</h2>
+        <p class="property-location">{{ property.location }}</p>
+        <p class="property-price">{{ property.price }}</p>
+        <div class="property-info">
+          <span><i class="icon-bed"></i> {{ property.numberOfBedrooms }} Bedrooms</span>
+          <span><i class="icon-bath"></i> {{ property.numberOfBathrooms }} Bathrooms</span>
+          <span><i class="icon-size"></i> {{ property.surface }}</span>
+        </div>
+        <p class="property-type">{{ property.type }}</p>
+        <div class="property-actions">
+          <a [routerLink]="['/properties', property.id]" class="btn-view">View Details</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

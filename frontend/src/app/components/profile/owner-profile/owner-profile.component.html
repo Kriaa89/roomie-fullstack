@@ -1,0 +1,162 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <h1>Property Owner Profile</h1>
+    <p *ngIf="currentUser">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+  </div>
+
+  <!-- Loading and Error States -->
+  <div *ngIf="loading.user || loading.profile" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading profile...</p>
+  </div>
+
+  <div *ngIf="error.user || error.profile" class="error-message">
+    {{ error.user || error.profile }}
+  </div>
+
+  <!-- Success Message -->
+  <div *ngIf="success" class="success-message">
+    {{ success }}
+  </div>
+
+  <!-- Profile View Mode -->
+  <div *ngIf="!loading.user && !loading.profile && !editMode && profile" class="profile-view">
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>Profile Information</h2>
+        <button (click)="toggleEditMode()" class="btn btn-primary">Edit Profile</button>
+      </div>
+
+      <div class="section-content">
+        <div class="profile-card">
+          <div class="profile-image">
+            <img [src]="profile.profilePicture || 'assets/images/default-profile.png'" alt="Profile Picture">
+          </div>
+          <div class="profile-details">
+            <h3>{{ currentUser?.firstName }} {{ currentUser?.lastName }}</h3>
+            <p><strong>Email:</strong> {{ currentUser?.email }}</p>
+            <p><strong>Phone:</strong> {{ currentUser?.phoneNumber }}</p>
+            <p><strong>City:</strong> {{ profile.city }}</p>
+            <p><strong>Bio:</strong> {{ profile.bio }}</p>
+            <p><strong>Profile Visibility:</strong> {{ profile.visibility ? 'Public' : 'Private' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>My Properties</h2>
+        <a routerLink="/owner/properties" class="btn btn-primary">Manage Properties</a>
+      </div>
+
+      <div class="section-content">
+        <div class="empty-state">
+          <p>Go to the Properties section to view and manage your property listings.</p>
+          <a routerLink="/owner/properties/new" class="btn btn-secondary">Add New Property</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Profile Message -->
+  <div *ngIf="!loading.user && !loading.profile && !profile && !editMode" class="empty-profile">
+    <div class="empty-state">
+      <h2>No Profile Found</h2>
+      <p>You haven't created a property owner profile yet. Create one to start listing your properties!</p>
+      <button (click)="toggleEditMode()" class="btn btn-primary">Create Profile</button>
+    </div>
+  </div>
+
+  <!-- Profile Edit Mode -->
+  <div *ngIf="!loading.user && !loading.profile && editMode" class="profile-edit">
+    <div class="profile-section">
+      <div class="section-header">
+        <h2>{{ profile ? 'Edit' : 'Create' }} Profile</h2>
+        <button *ngIf="profile" (click)="toggleEditMode()" class="btn btn-secondary">Cancel</button>
+      </div>
+
+      <div class="section-content">
+        <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+          <!-- Basic Information -->
+          <div class="form-group">
+            <label for="bio">Bio</label>
+            <textarea
+              id="bio"
+              formControlName="bio"
+              class="form-control"
+              rows="4"
+              [ngClass]="{ 'is-invalid': profileForm.get('bio')?.invalid && profileForm.get('bio')?.touched }"
+            ></textarea>
+            <div *ngIf="profileForm.get('bio')?.invalid && profileForm.get('bio')?.touched" class="invalid-feedback">
+              <div *ngIf="profileForm.get('bio')?.errors?.['required']">Bio is required</div>
+              <div *ngIf="profileForm.get('bio')?.errors?.['maxlength']">Bio cannot exceed 500 characters</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="city">City</label>
+            <input
+              type="text"
+              id="city"
+              formControlName="city"
+              class="form-control"
+              [ngClass]="{ 'is-invalid': profileForm.get('city')?.invalid && profileForm.get('city')?.touched }"
+            >
+            <div *ngIf="profileForm.get('city')?.invalid && profileForm.get('city')?.touched" class="invalid-feedback">
+              <div *ngIf="profileForm.get('city')?.errors?.['required']">City is required</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="profilePicture">Profile Picture URL</label>
+            <input
+              type="text"
+              id="profilePicture"
+              formControlName="profilePicture"
+              class="form-control"
+            >
+            <small class="form-text text-muted">Enter a URL for your profile picture</small>
+          </div>
+
+          <div class="form-group">
+            <label>Profile Visibility</label>
+            <div class="form-check">
+              <input
+                type="checkbox"
+                id="visibility"
+                formControlName="visibility"
+                class="form-check-input"
+              >
+              <label class="form-check-label" for="visibility">Make my profile visible to others</label>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-actions">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="profileForm.invalid || loading.submit"
+            >
+              <span *ngIf="loading.submit" class="spinner-border spinner-border-sm mr-1"></span>
+              {{ profile ? 'Update' : 'Create' }} Profile
+            </button>
+            <button
+              *ngIf="profile"
+              type="button"
+              class="btn btn-secondary"
+              (click)="toggleEditMode()"
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div *ngIf="error.submit" class="error-message mt-3">
+            {{ error.submit }}
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

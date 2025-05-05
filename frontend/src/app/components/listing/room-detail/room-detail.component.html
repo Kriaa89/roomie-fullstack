@@ -1,0 +1,104 @@
+<div class="room-detail-container">
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading room details...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Room Details -->
+  <div *ngIf="!loading && !error && room" class="room-content">
+    <!-- Back Button -->
+    <div class="back-navigation">
+      <a [routerLink]="['/rooms']" class="back-button">
+        <i class="icon-back"></i> Back to Rooms
+      </a>
+    </div>
+
+    <!-- Room Header -->
+    <div class="room-header">
+      <h1>{{ room.title }}</h1>
+      <div class="room-location">
+        <i class="icon-location"></i> {{ room.location }}
+      </div>
+    </div>
+
+    <!-- Image Gallery -->
+    <div class="room-gallery">
+      <div class="gallery-container">
+        <img [src]="imageUrls[currentImageIndex] || 'assets/images/default-room.png'" alt="{{ room.title }}" class="gallery-image">
+
+        <div *ngIf="imageUrls.length > 1" class="gallery-controls">
+          <button (click)="prevImage()" class="gallery-control prev">
+            <i class="icon-prev"></i>
+          </button>
+          <button (click)="nextImage()" class="gallery-control next">
+            <i class="icon-next"></i>
+          </button>
+        </div>
+
+        <div class="gallery-indicators" *ngIf="imageUrls.length > 1">
+          <span *ngFor="let url of imageUrls; let i = index"
+                [class.active]="i === currentImageIndex"
+                (click)="currentImageIndex = i">
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Info -->
+    <div class="room-info-container">
+      <div class="room-main-info">
+        <div class="room-price">{{ room.price }} <span class="price-period">per month</span></div>
+        <div class="room-availability">{{ room.availability ? 'Available' : 'Not Available' }}</div>
+
+        <div class="room-amenities-preview">
+          <h3>Amenities</h3>
+          <div class="amenities-tags">
+            <span *ngFor="let amenity of room.amenities.split(',').slice(0, 3)" class="amenity-tag">
+              {{ amenity.trim() }}
+            </span>
+            <span *ngIf="room.amenities.split(',').length > 3" class="more-amenities">
+              +{{ room.amenities.split(',').length - 3 }} more
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="host-info">
+        <h3>Hosted by</h3>
+        <div class="host-details">
+          <div class="host-name">{{ room.hostName }}</div>
+          <button (click)="viewHostProfile()" class="btn-view-profile">View Host Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Description -->
+    <div class="room-description">
+      <h2>Description</h2>
+      <p>{{ room.description }}</p>
+    </div>
+
+    <!-- Room Amenities -->
+    <div class="room-amenities">
+      <h2>Amenities</h2>
+      <div class="amenities-list">
+        <div *ngFor="let amenity of room.amenities.split(',')" class="amenity-item">
+          <i class="icon-check"></i>
+          <span>{{ amenity.trim() }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="room-actions">
+      <button *ngIf="isRenter" (click)="requestVisit()" class="btn-primary">Request a Visit</button>
+      <button *ngIf="isHost" (click)="editRoom()" class="btn-secondary">Edit Room</button>
+    </div>
+  </div>
+</div>

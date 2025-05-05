@@ -1,0 +1,352 @@
+/* Property Detail Container */
+.property-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 123, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #007bff;
+  animation: spin 1s ease-in-out infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+/* Property Content */
+.property-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Back Navigation */
+.back-navigation {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.icon-back {
+  margin-right: 5px;
+}
+
+/* Property Header */
+.property-header {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.property-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 28px;
+  color: #333;
+}
+
+.property-location {
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 16px;
+}
+
+.icon-location {
+  margin-right: 5px;
+}
+
+/* Property Gallery */
+.property-gallery {
+  position: relative;
+  background-color: #f8f9fa;
+}
+
+.gallery-container {
+  position: relative;
+  height: 500px;
+  overflow: hidden;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.gallery-control {
+  background-color: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.gallery-control:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.gallery-indicators {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.gallery-indicators span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+}
+
+.gallery-indicators span.active {
+  background-color: #fff;
+}
+
+/* Property Info Container */
+.property-info-container {
+  display: flex;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.property-main-info {
+  flex: 2;
+}
+
+.property-price {
+  font-size: 24px;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.property-type, .property-audience {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #495057;
+  margin-right: 10px;
+  margin-bottom: 15px;
+}
+
+.property-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.spec-item {
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+.spec-item i {
+  margin-right: 5px;
+  color: #007bff;
+}
+
+.property-owner-info {
+  flex: 1;
+  padding-left: 20px;
+  border-left: 1px solid #eee;
+}
+
+.property-owner-info h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+}
+
+.owner-details {
+  color: #666;
+}
+
+.owner-name {
+  font-weight: 500;
+}
+
+/* Property Description */
+.property-description {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.property-description h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #333;
+}
+
+.property-description p {
+  line-height: 1.6;
+  color: #666;
+}
+
+/* Property Amenities */
+.property-amenities {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.property-amenities h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #333;
+}
+
+.amenities-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.amenity-item {
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+.amenity-item i {
+  margin-right: 5px;
+  color: #28a745;
+}
+
+/* Property Rules */
+.property-rules {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.property-rules h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 20px;
+  color: #333;
+}
+
+.property-rules p {
+  line-height: 1.6;
+  color: #666;
+}
+
+/* Property Actions */
+.property-actions {
+  padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-primary, .btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .property-info-container {
+    flex-direction: column;
+  }
+
+  .property-owner-info {
+    padding-left: 0;
+    padding-top: 20px;
+    margin-top: 20px;
+    border-left: none;
+    border-top: 1px solid #eee;
+  }
+
+  .gallery-container {
+    height: 300px;
+  }
+
+  .amenities-list {
+    grid-template-columns: 1fr;
+  }
+}

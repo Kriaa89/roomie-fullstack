@@ -1,0 +1,41 @@
+<div class="role-selection-container">
+  <div class="card">
+    <div class="card-header">
+      <h2>Select Your Role</h2>
+    </div>
+    <div class="card-body">
+      <p class="lead">Choose the role that best describes what you're looking for:</p>
+
+      <form [formGroup]="roleForm" (ngSubmit)="onSubmit()">
+        <div class="role-options">
+          <div *ngFor="let role of roles" class="role-option">
+            <input
+              type="radio"
+              [id]="role.id"
+              formControlName="role"
+              [value]="role.id"
+              class="role-radio"
+            />
+            <label [for]="role.id" class="role-label">
+              <div class="role-title">{{ role.name }}</div>
+              <div class="role-description">{{ role.description }}</div>
+            </label>
+          </div>
+        </div>
+
+        <div *ngIf="submitted && f['role'].errors" class="invalid-feedback d-block">
+          <div *ngIf="f['role'].errors['required']">Please select a role</div>
+        </div>
+
+        <div class="form-group mt-4">
+          <button [disabled]="loading" class="btn btn-primary">
+            <span *ngIf="loading" class="spinner-border spinner-border-sm mr-1"></span>
+            Continue
+          </button>
+        </div>
+
+        <div *ngIf="error" class="alert alert-danger mt-3">{{error}}</div>
+      </form>
+    </div>
+  </div>
+</div>
