@@ -9,8 +9,6 @@ export interface User {
   profilePicture?: string;
   location: string;
   age: number;
-  emailVerified: boolean;
-  phoneVerified: boolean;
   idVerified: boolean;
   createdAt: string;
   updatedAt: string;

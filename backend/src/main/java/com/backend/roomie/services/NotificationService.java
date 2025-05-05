@@ -17,7 +17,7 @@ public class NotificationService {
 
     public Notification createNotification(Notification notification) {
         notification.setCreatedAt(LocalDateTime.now());
-        notification.setIsRead(false);
+        notification.setRead(false);
         return notificationRepository.save(notification);
     }
 
@@ -29,7 +29,7 @@ public class NotificationService {
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .build();
-        
+
         return notificationRepository.save(notification);
     }
 
@@ -56,7 +56,7 @@ public class NotificationService {
     public Notification markNotificationAsRead(Long notificationId) {
         return notificationRepository.findById(notificationId)
                 .map(notification -> {
-                    notification.setIsRead(true);
+                    notification.setRead(true);
                     return notificationRepository.save(notification);
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Notification not found"));
@@ -64,7 +64,7 @@ public class NotificationService {
 
     public List<Notification> markAllNotificationsAsRead(Long recipientId) {
         List<Notification> unreadNotifications = notificationRepository.findByRecipientIdAndIsReadFalse(recipientId);
-        unreadNotifications.forEach(notification -> notification.setIsRead(true));
+        unreadNotifications.forEach(notification -> notification.setRead(true));
         return notificationRepository.saveAll(unreadNotifications);
     }
 
@@ -75,5 +75,20 @@ public class NotificationService {
     public void deleteAllNotificationsForRecipient(Long recipientId) {
         List<Notification> notifications = notificationRepository.findByRecipientId(recipientId);
         notificationRepository.deleteAll(notifications);
+    }
+
+    public List<Notification> getNotificationsByRecipientId(Long recipientId) {
+        return getNotificationsByRecipient(recipientId);
+    }
+
+    public List<Notification> getUnreadNotificationsByRecipientId(Long recipientId) {
+        return getUnreadNotificationsByRecipient(recipientId);
+    }
+
+    public Notification updateNotification(Notification notification) {
+        if (!notificationRepository.existsById(notification.getId())) {
+            throw new IllegalArgumentException("Notification not found");
+        }
+        return notificationRepository.save(notification);
     }
 }

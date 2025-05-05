@@ -1,10 +1,8 @@
 package com.backend.roomie.services;
 
-import com.backend.roomie.dtos.UserDTO;
-import com.backend.roomie.models.User;
-import com.backend.roomie.models.UserRole;
-import com.backend.roomie.repositories.UserRepository;
-import com.backend.roomie.repositories.UserRoleRepository;
+import com.backend.roomie.models.AppUser;
+import com.backend.roomie.models.Role;
+import com.backend.roomie.repositories.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -18,89 +16,99 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private UserRoleRepository userRoleRepository;
+    private AppUserRepository appUserRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UserService userService;
+    private AppUserService appUserService;
 
-    private User testUser;
+    private AppUser testUser;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
 
         // Create test user
-        testUser = new User();
-        testUser.setId(1L);
-        testUser.setFirstName("Test");
-        testUser.setLastName("User");
-        testUser.setEmail("test@example.com");
-        testUser.setPassword("password");
-        testUser.setRoles(new ArrayList<>());
+        testUser = AppUser.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("User")
+            .email("test@example.com")
+            .password("password")
+            .role(Role.RENTER)
+            .emailVerified(true)
+            .phoneNumber("1234567890")
+            .build();
 
-        // Mock userRepository.findById
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(testUser));
+        // Mock appUserRepository.findById
+        when(appUserRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(appUserRepository.findById(anyLong())).thenReturn(Optional.of(testUser));
     }
 
     @Test
-    void testAddRoleToUser_RemovesExistingRoles() {
+    void testUpdateUserRole() {
         // Arrange
-        UserRole existingRole = new UserRole();
-        existingRole.setId(1L);
-        existingRole.setUser(testUser);
-        existingRole.setRoleType(UserRole.RoleType.RENTER);
-        existingRole.setCreatedAt(new Date());
-        existingRole.setUpdatedAt(new Date());
-        
-        testUser.getRoles().add(existingRole);
-        
-        // Mock userRoleRepository.save
-        when(userRoleRepository.save(any(UserRole.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        
+        AppUser userToUpdate = AppUser.builder()
+            .id(1L)
+            .firstName("Test")
+            .lastName("User")
+            .email("test@example.com")
+            .password("password")
+            .role(Role.RENTER)
+            .emailVerified(true)
+            .phoneNumber("1234567890")
+            .build();
+
+        // Mock appUserRepository.existsById
+        when(appUserRepository.existsById(1L)).thenReturn(true);
+
+        // Mock appUserRepository.save
+        when(appUserRepository.save(any(AppUser.class))).thenAnswer(invocation -> {
+            AppUser savedUser = invocation.getArgument(0);
+            savedUser.setRole(Role.OWNER);
+            return savedUser;
+        });
+
         // Act
-        userService.addRoleToUser(1L, UserRole.RoleType.OWNER);
-        
+        userToUpdate.setRole(Role.OWNER);
+        AppUser updatedUser = appUserService.updateUser(userToUpdate);
+
         // Assert
-        // Verify that delete was called on the existing role
-        verify(userRoleRepository, times(1)).delete(existingRole);
-        
-        // Verify that save was called with a new role
-        verify(userRoleRepository, times(1)).save(any(UserRole.class));
+        assertEquals(Role.OWNER, updatedUser.getRole());
+        verify(appUserRepository, times(1)).save(userToUpdate);
     }
 
     @Test
-    void testAddRoleToUser_ThrowsExceptionIfUserAlreadyHasRole() {
+    void testUpdateUser_ThrowsExceptionIfUserNotFound() {
         // Arrange
-        UserRole existingRole = new UserRole();
-        existingRole.setId(1L);
-        existingRole.setUser(testUser);
-        existingRole.setRoleType(UserRole.RoleType.OWNER);
-        existingRole.setCreatedAt(new Date());
-        existingRole.setUpdatedAt(new Date());
-        
-        testUser.getRoles().add(existingRole);
-        
+        AppUser userToUpdate = AppUser.builder()
+            .id(999L) // Non-existent ID
+            .firstName("Test")
+            .lastName("User")
+            .email("test@example.com")
+            .password("password")
+            .role(Role.RENTER)
+            .emailVerified(true)
+            .phoneNumber("1234567890")
+            .build();
+
+        // Mock appUserRepository.existsById
+        when(appUserRepository.existsById(999L)).thenReturn(false);
+
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.addRoleToUser(1L, UserRole.RoleType.OWNER);
+            appUserService.updateUser(userToUpdate);
         });
-        
-        // Verify that delete was not called
-        verify(userRoleRepository, never()).delete(any(UserRole.class));
-        
+
         // Verify that save was not called
-        verify(userRoleRepository, never()).save(any(UserRole.class));
+        verify(appUserRepository, never()).save(any(AppUser.class));
     }
 }

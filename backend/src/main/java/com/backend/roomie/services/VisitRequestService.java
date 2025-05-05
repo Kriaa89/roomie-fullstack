@@ -27,10 +27,10 @@ public class VisitRequestService {
         // Validate users exist
         AppUser sender = appUserRepository.findById(senderId)
                 .orElseThrow(() -> new IllegalArgumentException("Sender user not found"));
-        
+
         AppUser receiver = appUserRepository.findById(receiverId)
                 .orElseThrow(() -> new IllegalArgumentException("Receiver user not found"));
-        
+
         // Create visit request
         VisitRequest visitRequest = VisitRequest.builder()
                 .senderId(senderId)
@@ -39,18 +39,18 @@ public class VisitRequestService {
                 .requestedDateTime(requestedDateTime)
                 .message(message)
                 .build();
-        
+
         VisitRequest savedRequest = visitRequestRepository.save(visitRequest);
-        
+
         // Create notification for receiver
         createVisitRequestNotification(receiverId, senderId, requestedDateTime);
-        
+
         return savedRequest;
     }
 
     private void createVisitRequestNotification(Long recipientId, Long requesterId, LocalDateTime dateTime) {
         AppUser requester = appUserRepository.findById(requesterId).get();
-        
+
         Notification notification = Notification.builder()
                 .recipientId(recipientId)
                 .content(requester.getFirstName() + " has requested a visit on " + 
@@ -59,7 +59,7 @@ public class VisitRequestService {
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .build();
-        
+
         notificationRepository.save(notification);
     }
 
@@ -83,11 +83,11 @@ public class VisitRequestService {
         LocalDateTime now = LocalDateTime.now();
         List<VisitRequest> senderRequests = visitRequestRepository.findBySenderIdAndStatus(userId, VisitRequest.VisitStatus.CONFIRMED);
         List<VisitRequest> receiverRequests = visitRequestRepository.findByReceiverIdAndStatus(userId, VisitRequest.VisitStatus.CONFIRMED);
-        
+
         // Filter for upcoming visits
         senderRequests.removeIf(request -> request.getRequestedDateTime().isBefore(now));
         receiverRequests.removeIf(request -> request.getRequestedDateTime().isBefore(now));
-        
+
         // Combine lists
         senderRequests.addAll(receiverRequests);
         return senderRequests;
@@ -97,19 +97,19 @@ public class VisitRequestService {
     public VisitRequest updateVisitRequestStatus(Long requestId, VisitRequest.VisitStatus newStatus) {
         VisitRequest visitRequest = visitRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Visit request not found"));
-        
+
         visitRequest.setStatus(newStatus);
         VisitRequest updatedRequest = visitRequestRepository.save(visitRequest);
-        
+
         // Create notification for sender about status change
         createVisitStatusChangeNotification(visitRequest.getSenderId(), visitRequest.getReceiverId(), newStatus);
-        
+
         return updatedRequest;
     }
 
     private void createVisitStatusChangeNotification(Long recipientId, Long responderId, VisitRequest.VisitStatus status) {
         AppUser responder = appUserRepository.findById(responderId).get();
-        
+
         String statusMessage;
         switch (status) {
             case CONFIRMED:
@@ -124,7 +124,7 @@ public class VisitRequestService {
             default:
                 return; // Don't notify for PENDING status
         }
-        
+
         Notification notification = Notification.builder()
                 .recipientId(recipientId)
                 .content(responder.getFirstName() + " has " + statusMessage + " your visit request")
@@ -132,7 +132,7 @@ public class VisitRequestService {
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .build();
-        
+
         notificationRepository.save(notification);
     }
 
@@ -140,14 +140,39 @@ public class VisitRequestService {
     public VisitRequest rescheduleVisitRequest(Long requestId, LocalDateTime newDateTime) {
         VisitRequest visitRequest = visitRequestRepository.findById(requestId)
                 .orElseThrow(() -> new IllegalArgumentException("Visit request not found"));
-        
+
         visitRequest.setRequestedDateTime(newDateTime);
         visitRequest.setStatus(VisitRequest.VisitStatus.RESCHEDULED);
-        
+
         return visitRequestRepository.save(visitRequest);
     }
 
     public void deleteVisitRequest(Long id) {
         visitRequestRepository.deleteById(id);
+    }
+
+    @Transactional
+    public VisitRequest createVisitRequest(VisitRequest visitRequest) {
+        return createVisitRequest(
+            visitRequest.getSenderId(),
+            visitRequest.getReceiverId(),
+            visitRequest.getRequestedDateTime(),
+            visitRequest.getMessage()
+        );
+    }
+
+    public VisitRequest updateVisitRequest(VisitRequest visitRequest) {
+        if (!visitRequestRepository.existsById(visitRequest.getId())) {
+            throw new IllegalArgumentException("Visit request not found");
+        }
+        return visitRequestRepository.save(visitRequest);
+    }
+
+    public List<VisitRequest> getVisitRequestsBySenderId(Long senderId) {
+        return getVisitRequestsBySender(senderId);
+    }
+
+    public List<VisitRequest> getVisitRequestsByReceiverId(Long receiverId) {
+        return getVisitRequestsByReceiver(receiverId);
     }
 }

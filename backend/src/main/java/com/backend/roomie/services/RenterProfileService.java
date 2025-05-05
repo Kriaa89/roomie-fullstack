@@ -21,17 +21,17 @@ public class RenterProfileService {
     public RenterProfile createRenterProfile(RenterProfile renterProfile, Long userId) {
         AppUser user = appUserRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+
         // Ensure user has RENTER role
         if (user.getRole() != Role.RENTER) {
             throw new IllegalArgumentException("User must have RENTER role to create a renter profile");
         }
-        
+
         // Check if profile already exists
         if (renterProfileRepository.findByAppUser(user).isPresent()) {
             throw new IllegalArgumentException("Renter profile already exists for this user");
         }
-        
+
         renterProfile.setAppUser(user);
         return renterProfileRepository.save(renterProfile);
     }
@@ -57,7 +57,7 @@ public class RenterProfileService {
         if (!renterProfileRepository.existsById(renterProfile.getId())) {
             throw new IllegalArgumentException("Renter profile not found");
         }
-        
+
         return renterProfileRepository.save(renterProfile);
     }
 
@@ -73,5 +73,9 @@ public class RenterProfileService {
                     return profile.isProfileVisible();
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Renter profile not found"));
+    }
+
+    public List<RenterProfile> getAllVisibleRenterProfiles() {
+        return getVisibleRenterProfiles();
     }
 }

@@ -1,10 +1,12 @@
 package com.backend.roomie.controllers;
 
+import com.backend.roomie.dtos.PropertyListingDto;
 import com.backend.roomie.dtos.RenterProfileDto;
+import com.backend.roomie.dtos.SwipeLikeDto;
+import com.backend.roomie.dtos.VisitRequestDto;
 import com.backend.roomie.models.AppUser;
 import com.backend.roomie.models.RenterProfile;
-import com.backend.roomie.services.AppUserService;
-import com.backend.roomie.services.RenterProfileService;
+import com.backend.roomie.services.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +23,9 @@ public class RenterProfileController {
 
     private final RenterProfileService renterProfileService;
     private final AppUserService appUserService;
+    private final SwipeLikeService swipeLikeService;
+    private final VisitRequestService visitRequestService;
+    private final PropertyListingService propertyListingService;
 
     @GetMapping("/profile")
     @PreAuthorize("hasRole('RENTER')")
@@ -28,7 +33,7 @@ public class RenterProfileController {
         AppUser currentUser = (AppUser) authentication.getPrincipal();
         RenterProfile profile = renterProfileService.getRenterProfileByUserId(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
-        
+
         return ResponseEntity.ok(mapToDto(profile));
     }
 
@@ -37,11 +42,11 @@ public class RenterProfileController {
     public ResponseEntity<RenterProfileDto> updateProfile(
             @RequestBody RenterProfileDto profileDto,
             Authentication authentication) {
-        
+
         AppUser currentUser = (AppUser) authentication.getPrincipal();
         RenterProfile profile = renterProfileService.getRenterProfileByUserId(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
-        
+
         // Update profile fields
         profile.setBio(profileDto.getBio());
         profile.setCity(profileDto.getCity());
@@ -49,7 +54,7 @@ public class RenterProfileController {
         profile.setSkillsExpected(profileDto.getSkillsExpected());
         profile.setLifestylePreferences(profileDto.getLifestylePreferences());
         profile.setProfileVisible(profileDto.isProfileVisible());
-        
+
         RenterProfile updatedProfile = renterProfileService.updateRenterProfile(profile);
         return ResponseEntity.ok(mapToDto(updatedProfile));
     }
@@ -60,7 +65,7 @@ public class RenterProfileController {
         List<RenterProfileDto> profileDtos = profiles.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(profileDtos);
     }
 
@@ -68,13 +73,68 @@ public class RenterProfileController {
     public ResponseEntity<RenterProfileDto> getProfileById(@PathVariable Long id) {
         RenterProfile profile = renterProfileService.getRenterProfileById(id)
                 .orElseThrow(() -> new RuntimeException("Profile not found"));
-        
+
         // Only return if profile is visible
         if (!profile.isProfileVisible()) {
             return ResponseEntity.notFound().build();
         }
-        
+
         return ResponseEntity.ok(mapToDto(profile));
+    }
+
+    @GetMapping("/matches")
+    @PreAuthorize("hasRole('RENTER')")
+    public ResponseEntity<List<SwipeLikeDto>> getMatches(Authentication authentication) {
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        return ResponseEntity.ok(swipeLikeService.getMatchesForUser(currentUser.getId())
+                .stream()
+                .map(match -> SwipeLikeDto.builder()
+                        .id(match.getId())
+                        .swiperId(match.getSwiperId())
+                        .swipedId(match.getSwipedId())
+                        .status(match.getStatus())
+                        .timestamp(match.getTimestamp())
+                        .build())
+                .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/visit-requests")
+    @PreAuthorize("hasRole('RENTER')")
+    public ResponseEntity<List<VisitRequestDto>> getVisitRequests(Authentication authentication) {
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        return ResponseEntity.ok(visitRequestService.getVisitRequestsBySenderId(currentUser.getId())
+                .stream()
+                .map(request -> VisitRequestDto.builder()
+                        .id(request.getId())
+                        .senderId(request.getSenderId())
+                        .receiverId(request.getReceiverId())
+                        .status(request.getStatus())
+                        .requestedDateTime(request.getRequestedDateTime())
+                        .message(request.getMessage())
+                        .build())
+                .collect(Collectors.toList()));
+    }
+
+    @GetMapping("/properties")
+    @PreAuthorize("hasRole('RENTER')")
+    public ResponseEntity<List<PropertyListingDto>> getProperties(Authentication authentication) {
+        return ResponseEntity.ok(propertyListingService.getAllActivePropertyListings()
+                .stream()
+                .map(property -> PropertyListingDto.builder()
+                        .id(property.getId())
+                        .title(property.getTitle())
+                        .description(property.getDescription())
+                        .photos(property.getPhotos())
+                        .price(property.getPrice())
+                        .address(property.getAddress())
+                        .city(property.getCity())
+                        .availableFrom(property.getAvailableFrom())
+                        .active(property.isActive())
+                        .ownerId(property.getOwner().getId())
+                        .ownerName(property.getOwner().getAppUser().getFirstName() + " " + property.getOwner().getAppUser().getLastName())
+                        .ownerProfilePicture(property.getOwner().getProfilePictureUrl())
+                        .build())
+                .collect(Collectors.toList()));
     }
 
     private RenterProfileDto mapToDto(RenterProfile profile) {

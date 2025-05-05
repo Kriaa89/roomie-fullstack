@@ -1,0 +1,86 @@
+<div class="swipe-container">
+  <div class="swipe-header">
+    <h1>Find Your Perfect Roommate</h1>
+    <p class="swipe-instructions">Swipe right to like, left to dislike, or use the buttons below</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading potential roommates...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- No More Hosts Message -->
+  <div *ngIf="!loading && !error && noMoreHosts" class="no-more-hosts">
+    <div class="empty-state">
+      <h2>No More Roommate Hosts</h2>
+      <p>You've seen all available roommate hosts. Check back later for new hosts!</p>
+      <a routerLink="/renter/matches" class="btn-primary">View Your Matches</a>
+    </div>
+  </div>
+
+  <!-- Swipe Card -->
+  <div *ngIf="!loading && !error && !noMoreHosts" class="swipe-card-container">
+    <div #swipeCard
+         class="swipe-card"
+         (mousedown)="onMouseDown($event)"
+         (mousemove)="onMouseMove($event)"
+         (mouseup)="onMouseUp()"
+         (mouseleave)="onMouseUp()"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd()">
+
+      <div class="host-image">
+        <img [src]="roommateHosts[currentIndex].profilePicture || 'assets/images/default-profile.png'"
+             alt="{{ roommateHosts[currentIndex].user.firstName }}">
+
+        <!-- Like/Dislike Indicators -->
+        <div class="like-indicator">LIKE</div>
+        <div class="dislike-indicator">NOPE</div>
+      </div>
+
+      <div class="host-details">
+        <h2>{{ roommateHosts[currentIndex].user.firstName }} {{ roommateHosts[currentIndex].user.lastName }}</h2>
+        <p class="host-location">
+          <i class="icon-location"></i> {{ roommateHosts[currentIndex].city }}
+        </p>
+
+        <div class="host-bio">
+          {{ roommateHosts[currentIndex].bio | slice:0:150 }}{{ roommateHosts[currentIndex].bio.length > 150 ? '...' : '' }}
+        </div>
+
+        <div class="skills-section">
+          <h3>Skills Offered</h3>
+          <div class="skills-list">
+            <span *ngFor="let skill of roommateHosts[currentIndex].skillsOffered" class="skill-tag">{{ skill }}</span>
+          </div>
+        </div>
+
+        <div class="lifestyle-section">
+          <h3>Lifestyle Preferences</h3>
+          <div class="lifestyle-list">
+            <span *ngFor="let preference of roommateHosts[currentIndex].lifestylePreferences" class="lifestyle-tag">{{ preference }}</span>
+          </div>
+        </div>
+
+        <a [routerLink]="['/host-profile', roommateHosts[currentIndex].id]" class="view-details">View Full Profile</a>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="swipe-actions">
+      <button class="btn-dislike" (click)="onDislikeClick()" [disabled]="swipeInProgress">
+        <i class="icon-dislike"></i>
+      </button>
+      <button class="btn-like" (click)="onLikeClick()" [disabled]="swipeInProgress">
+        <i class="icon-like"></i>
+      </button>
+    </div>
+  </div>
+</div>

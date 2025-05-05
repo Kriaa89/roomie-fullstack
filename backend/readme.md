@@ -203,9 +203,16 @@ Design RESTful APIs for profile, listing management, and user interactions, incl
     - Room listing component
     - Property detail component
     - Room detail component
+    - Property form component
+    - Room form component
+  - Swipe components:
+    - Property swipe component
+    - Roommate swipe component
+    - Renter swipe component
+  - Visit request components:
+    - Visit request component
+    - Visit request form component
+    - Visit request list component
 
 ### Next Steps
-- 🔄 Implement remaining frontend components:
-  - Swipe component
-  - Visit request components
 - 🔄 Add unit and integration tests

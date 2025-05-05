@@ -45,8 +45,8 @@ export class PropertyDetailComponent implements OnInit {
     // Check user role
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
-      this.isOwner = currentUser.roles.includes(Role.OWNER);
-      this.isRenter = currentUser.roles.includes(Role.RENTER);
+      this.isOwner = currentUser.role === Role.OWNER;
+      this.isRenter = currentUser.role === Role.RENTER;
     }
   }
 

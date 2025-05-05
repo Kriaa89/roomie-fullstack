@@ -21,7 +21,7 @@ public class PropertyListingService {
     public PropertyListing createPropertyListing(PropertyListing propertyListing, Long ownerId) {
         OwnerProfile owner = ownerProfileRepository.findById(ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("Owner profile not found"));
-        
+
         propertyListing.setOwner(owner);
         return propertyListingRepository.save(propertyListing);
     }
@@ -59,7 +59,7 @@ public class PropertyListingService {
         if (!propertyListingRepository.existsById(propertyListing.getId())) {
             throw new IllegalArgumentException("Property listing not found");
         }
-        
+
         return propertyListingRepository.save(propertyListing);
     }
 
@@ -75,5 +75,20 @@ public class PropertyListingService {
                     return listing.isActive();
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Property listing not found"));
+    }
+
+    public List<PropertyListing> getAllActivePropertyListings() {
+        return getActivePropertyListings();
+    }
+
+    public PropertyListing createPropertyListing(PropertyListing propertyListing) {
+        if (propertyListing.getOwner() == null || propertyListing.getOwner().getId() == null) {
+            throw new IllegalArgumentException("Property listing must have an owner with a valid ID");
+        }
+        return createPropertyListing(propertyListing, propertyListing.getOwner().getId());
+    }
+
+    public List<PropertyListing> getPropertyListingsByOwnerId(Long ownerId) {
+        return getPropertyListingsByOwner(ownerId);
     }
 }

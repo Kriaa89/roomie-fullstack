@@ -1,0 +1,41 @@
+<div class="notification-container">
+  <div class="notification-header">
+    <h1>Notifications</h1>
+    <div class="notification-actions" *ngIf="notifications.length > 0">
+      <button (click)="markAllAsRead()" class="btn-mark-all">Mark All as Read</button>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading notifications...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && notifications.length === 0" class="empty-state">
+    <p>You don't have any notifications yet.</p>
+  </div>
+
+  <!-- Notifications List -->
+  <div *ngIf="!loading && !error && notifications.length > 0" class="notifications-list">
+    <div *ngFor="let notification of notifications" class="notification-card" [class.unread]="!notification.read">
+      <div class="notification-icon">
+        {{ getNotificationIcon(notification.type) }}
+      </div>
+      <div class="notification-content">
+        <div class="notification-message">{{ notification.message }}</div>
+        <div class="notification-time">{{ notification.createdAt | date:'medium' }}</div>
+      </div>
+      <div class="notification-actions">
+        <button *ngIf="!notification.read" (click)="markAsRead(notification.id)" class="btn-mark-read">Mark as Read</button>
+        <button (click)="deleteNotification(notification.id)" class="btn-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,81 @@
+<div class="swipe-container">
+  <div class="swipe-header">
+    <h1>Find Your Perfect Property</h1>
+    <p class="swipe-instructions">Swipe right to like, left to dislike, or use the buttons below</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading properties...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- No More Properties Message -->
+  <div *ngIf="!loading && !error && noMoreProperties" class="no-more-properties">
+    <div class="empty-state">
+      <h2>No More Properties</h2>
+      <p>You've seen all available properties. Check back later for new listings!</p>
+      <a routerLink="/renter/matches" class="btn-primary">View Your Matches</a>
+    </div>
+  </div>
+
+  <!-- Swipe Card -->
+  <div *ngIf="!loading && !error && !noMoreProperties" class="swipe-card-container">
+    <div #swipeCard
+         class="swipe-card"
+         (mousedown)="onMouseDown($event)"
+         (mousemove)="onMouseMove($event)"
+         (mouseup)="onMouseUp()"
+         (mouseleave)="onMouseUp()"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd()">
+
+      <div class="property-image">
+        <img [src]="properties[currentIndex].images.split(',')[0] || 'assets/images/default-property.png'"
+             alt="{{ properties[currentIndex].name }}">
+
+        <!-- Like/Dislike Indicators -->
+        <div class="like-indicator">LIKE</div>
+        <div class="dislike-indicator">NOPE</div>
+      </div>
+
+      <div class="property-details">
+        <h2>{{ properties[currentIndex].name }}</h2>
+        <p class="property-location">
+          <i class="icon-location"></i> {{ properties[currentIndex].location }}
+        </p>
+        <p class="property-price">{{ properties[currentIndex].price }}</p>
+
+        <div class="property-specs">
+          <span><i class="icon-bed"></i> {{ properties[currentIndex].numberOfBedrooms }} Bedrooms</span>
+          <span><i class="icon-bath"></i> {{ properties[currentIndex].numberOfBathrooms }} Bathrooms</span>
+          <span><i class="icon-size"></i> {{ properties[currentIndex].surface }}</span>
+        </div>
+
+        <p class="property-type">{{ properties[currentIndex].type }}</p>
+
+        <div class="property-description">
+          {{ properties[currentIndex].description | slice:0:150 }}{{ properties[currentIndex].description.length > 150 ? '...' : '' }}
+        </div>
+
+        <a [routerLink]="['/properties', properties[currentIndex].id]" class="view-details">View Details</a>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="swipe-actions">
+      <button class="btn-dislike" (click)="onDislikeClick()" [disabled]="swipeInProgress">
+        <i class="icon-dislike"></i>
+      </button>
+      <button class="btn-like" (click)="onLikeClick()" [disabled]="swipeInProgress">
+        <i class="icon-like"></i>
+      </button>
+    </div>
+  </div>
+</div>

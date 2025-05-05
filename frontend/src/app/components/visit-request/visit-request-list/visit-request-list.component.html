@@ -1,0 +1,114 @@
+<div class="visit-list-container">
+  <div class="list-header">
+    <h2>My Visit Requests</h2>
+    <div class="filter-controls">
+      <span>Filter by status:</span>
+      <div class="filter-buttons">
+        <button
+          [class.active]="statusFilter === 'all'"
+          (click)="applyFilter('all')"
+          class="filter-btn"
+        >All</button>
+        <button
+          [class.active]="statusFilter === 'pending'"
+          (click)="applyFilter('pending')"
+          class="filter-btn pending"
+        >Pending</button>
+        <button
+          [class.active]="statusFilter === 'approved'"
+          (click)="applyFilter('approved')"
+          class="filter-btn approved"
+        >Approved</button>
+        <button
+          [class.active]="statusFilter === 'rejected'"
+          (click)="applyFilter('rejected')"
+          class="filter-btn rejected"
+        >Rejected</button>
+        <button
+          [class.active]="statusFilter === 'cancelled'"
+          (click)="applyFilter('cancelled')"
+          class="filter-btn cancelled"
+        >Cancelled</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading visit requests...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && filteredRequests.length === 0" class="empty-state">
+    <p *ngIf="statusFilter === 'all'">You don't have any visit requests yet.</p>
+    <p *ngIf="statusFilter !== 'all'">No {{ statusFilter }} visit requests found.</p>
+    <a *ngIf="userRole === 'RENTER'" routerLink="/renter/visits/new" class="btn-primary">Create New Visit Request</a>
+  </div>
+
+  <!-- Visit Requests List -->
+  <div *ngIf="!loading && !error && filteredRequests.length > 0" class="visit-requests-list">
+    <div *ngFor="let request of filteredRequests" class="visit-request-card">
+      <div class="request-header">
+        <div class="request-title">
+          <h3 *ngIf="request.property">Visit to {{ request.property.name }}</h3>
+          <h3 *ngIf="request.roommateHost">Visit with {{ request.roommateHost.user.firstName }}</h3>
+        </div>
+        <div class="request-status" [ngClass]="'status-' + request.status.toLowerCase()">
+          {{ request.status }}
+        </div>
+      </div>
+
+      <div class="request-details">
+        <div class="detail-item">
+          <span class="detail-label">Requester:</span>
+          <span class="detail-value">{{ request.requester.firstName }} {{ request.requester.lastName }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Date:</span>
+          <span class="detail-value">{{ formatDate(request.requestDate) }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Time:</span>
+          <span class="detail-value">{{ request.requestTime }}</span>
+        </div>
+        <div class="detail-item" *ngIf="request.message">
+          <span class="detail-label">Message:</span>
+          <span class="detail-value">{{ request.message }}</span>
+        </div>
+        <div class="detail-item" *ngIf="request.responseMessage">
+          <span class="detail-label">Response:</span>
+          <span class="detail-value">{{ request.responseMessage }}</span>
+        </div>
+      </div>
+
+      <!-- Action buttons based on user role and request status -->
+      <div class="request-actions">
+        <!-- For property owners and roommate hosts -->
+        <div *ngIf="(userRole === 'OWNER' || userRole === 'ROOMMATE_HOST') && request.status === 'PENDING'">
+          <button
+            (click)="updateRequestStatus(request.id, VisitStatus.APPROVED, 'Your visit request has been approved.')"
+            class="btn-approve"
+          >Approve</button>
+          <button
+            (click)="updateRequestStatus(request.id, VisitStatus.REJECTED, 'Sorry, the requested time is not available.')"
+            class="btn-reject"
+          >Reject</button>
+        </div>
+
+        <!-- For renters -->
+        <div *ngIf="userRole === 'RENTER' && request.status === 'PENDING'">
+          <button
+            (click)="cancelRequest(request.id)"
+            class="btn-cancel"
+          >Cancel Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

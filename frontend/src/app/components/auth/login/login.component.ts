@@ -4,6 +4,7 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { LoginRequest } from '../../../models/auth.model';
+import { Role } from '../../../models/role.model';
 
 @Component({
   selector: 'app-login',
@@ -58,8 +59,25 @@ export class LoginComponent {
 
     this.authService.login(loginRequest)
       .subscribe({
-        next: () => {
-          this.router.navigate([this.returnUrl]);
+        next: (response) => {
+          // Navigate based on the user's role
+          if (response.role) {
+            switch (response.role) {
+              case Role.RENTER:
+                this.router.navigate(['/renter']);
+                break;
+              case Role.OWNER:
+                this.router.navigate(['/owner']);
+                break;
+              case Role.ROOMMATE_HOST:
+                this.router.navigate(['/host']);
+                break;
+              default:
+                this.router.navigate([this.returnUrl]);
+            }
+          } else {
+            this.router.navigate([this.returnUrl]);
+          }
         },
         error: error => {
           this.error = error;

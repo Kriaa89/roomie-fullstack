@@ -73,6 +73,6 @@ public class AppUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return emailVerified;
+        return true; // Always return true to enable all users
     }
 }

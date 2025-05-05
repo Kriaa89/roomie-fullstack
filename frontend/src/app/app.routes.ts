@@ -1,47 +1,48 @@
 import { Routes } from '@angular/router';
 import { Role } from './models/role.model';
 import { AuthGuard } from './guards/auth.guard';
+import { Type } from '@angular/core';
 
-// These component imports will be implemented later
+// These imports will be used for lazy loading
 // Auth components
-const LoginComponent = () => import('./components/auth/login/login.component').then(m => m.LoginComponent);
-const RegisterComponent = () => import('./components/auth/register/register.component').then(m => m.RegisterComponent);
-const RoleSelectionComponent = () => import('./components/auth/role-selection/role-selection.component').then(m => m.RoleSelectionComponent);
+import { LoginComponent } from './components/auth/login/login.component';
+import { RegisterComponent } from './components/auth/register/register.component';
 
 // Dashboard components
-const LandingComponent = () => import('./components/landing/landing.component').then(m => m.LandingComponent);
-const RenterDashboardComponent = () => import('./components/dashboard/renter-dashboard/renter-dashboard.component').then(m => m.RenterDashboardComponent);
-const OwnerDashboardComponent = () => import('./components/dashboard/owner-dashboard/owner-dashboard.component').then(m => m.OwnerDashboardComponent);
-const RoommateHostDashboardComponent = () => import('./components/dashboard/roommate-host-dashboard/roommate-host-dashboard.component').then(m => m.RoommateHostDashboardComponent);
+import { LandingComponent } from './components/landing/landing.component';
+import { RenterDashboardComponent } from './components/dashboard/renter-dashboard/renter-dashboard.component';
+import { OwnerDashboardComponent } from './components/dashboard/owner-dashboard/owner-dashboard.component';
+import { RoommateHostDashboardComponent } from './components/dashboard/roommate-host-dashboard/roommate-host-dashboard.component';
 
 // Profile components
-const RenterProfileComponent = () => import('./components/profile/renter-profile/renter-profile.component').then(m => m.RenterProfileComponent);
-const OwnerProfileComponent = () => import('./components/profile/owner-profile/owner-profile.component').then(m => m.OwnerProfileComponent);
-const RoommateHostProfileComponent = () => import('./components/profile/roommate-host-profile/roommate-host-profile.component').then(m => m.RoommateHostProfileComponent);
+import { RenterProfileComponent } from './components/profile/renter-profile/renter-profile.component';
+import { OwnerProfileComponent } from './components/profile/owner-profile/owner-profile.component';
+import { RoommateHostProfileComponent } from './components/profile/roommate-host-profile/roommate-host-profile.component';
 
 // Listing components
-const PropertyListingComponent = () => import('./components/listing/property-listing/property-listing.component').then(m => m.PropertyListingComponent);
-const RoomListingComponent = () => import('./components/listing/room-listing/room-listing.component').then(m => m.RoomListingComponent);
-const PropertyDetailComponent = () => import('./components/listing/property-detail/property-detail.component').then(m => m.PropertyDetailComponent);
-const RoomDetailComponent = () => import('./components/listing/room-detail/room-detail.component').then(m => m.RoomDetailComponent);
-const PropertyFormComponent = () => import('./components/listing/property-form/property-form.component').then(m => m.PropertyFormComponent);
-const RoomFormComponent = () => import('./components/listing/room-form/room-form.component').then(m => m.RoomFormComponent);
+import { PropertyListingComponent } from './components/listing/property-listing/property-listing.component';
+import { RoomListingComponent } from './components/listing/room-listing/room-listing.component';
+import { PropertyDetailComponent } from './components/listing/property-detail/property-detail.component';
+import { RoomDetailComponent } from './components/listing/room-detail/room-detail.component';
+// These components don't exist yet and will be implemented later
+// import { PropertyFormComponent } from './components/listing/property-form/property-form.component';
+// import { RoomFormComponent } from './components/listing/room-form/room-form.component';
 
 // Swipe components
-const PropertySwipeComponent = () => import('./components/swipe/property-swipe/property-swipe.component').then(m => m.PropertySwipeComponent);
-const RoommateSwipeComponent = () => import('./components/swipe/roommate-swipe/roommate-swipe.component').then(m => m.RoommateSwipeComponent);
-const RenterSwipeComponent = () => import('./components/swipe/renter-swipe/renter-swipe.component').then(m => m.RenterSwipeComponent);
+import { PropertySwipeComponent } from './components/swipe/property-swipe/property-swipe.component';
+import { RoommateSwipeComponent } from './components/swipe/roommate-swipe/roommate-swipe.component';
+import { RenterSwipeComponent } from './components/swipe/renter-swipe/renter-swipe.component';
 
 // Visit request components
-const VisitRequestComponent = () => import('./components/visit-request/visit-request.component').then(m => m.VisitRequestComponent);
-const VisitRequestFormComponent = () => import('./components/visit-request/visit-request-form/visit-request-form.component').then(m => m.VisitRequestFormComponent);
-const VisitRequestListComponent = () => import('./components/visit-request/visit-request-list/visit-request-list.component').then(m => m.VisitRequestListComponent);
+import { VisitRequestComponent } from './components/visit-request/visit-request.component';
+import { VisitRequestFormComponent } from './components/visit-request/visit-request-form/visit-request-form.component';
+import { VisitRequestListComponent } from './components/visit-request/visit-request-list/visit-request-list.component';
 
 // Match components
-const MatchListComponent = () => import('./components/match/match-list/match-list.component').then(m => m.MatchListComponent);
+import { MatchListComponent } from './components/match/match-list/match-list.component';
 
 // Notification components
-const NotificationComponent = () => import('./components/notification/notification.component').then(m => m.NotificationComponent);
+import { NotificationComponent } from './components/notification/notification.component';
 
 export const routes: Routes = [
   // Public routes
@@ -49,18 +50,12 @@ export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
 
-  // Role selection (requires authentication)
-  {
-    path: 'select-role',
-    component: RoleSelectionComponent,
-    canActivate: [AuthGuard]
-  },
 
   // Renter routes
   {
     path: 'renter',
     canActivate: [AuthGuard],
-    data: { roles: [Role.RENTER] },
+    data: { role: [Role.RENTER] },
     children: [
       { path: '', component: RenterDashboardComponent },
       { path: 'profile', component: RenterProfileComponent },
@@ -77,13 +72,14 @@ export const routes: Routes = [
   {
     path: 'owner',
     canActivate: [AuthGuard],
-    data: { roles: [Role.OWNER] },
+    data: { role: [Role.OWNER] },
     children: [
       { path: '', component: OwnerDashboardComponent },
       { path: 'profile', component: OwnerProfileComponent },
       { path: 'properties', component: PropertyListingComponent },
-      { path: 'properties/new', component: PropertyFormComponent },
-      { path: 'properties/edit/:id', component: PropertyFormComponent },
+      // These routes are commented out until the components are implemented
+      // { path: 'properties/new', component: PropertyFormComponent },
+      // { path: 'properties/edit/:id', component: PropertyFormComponent },
       { path: 'properties/:id', component: PropertyDetailComponent },
       { path: 'visits', component: VisitRequestListComponent },
       { path: 'notifications', component: NotificationComponent }
@@ -94,13 +90,14 @@ export const routes: Routes = [
   {
     path: 'host',
     canActivate: [AuthGuard],
-    data: { roles: [Role.ROOMMATE_HOST] },
+    data: { role: [Role.ROOMMATE_HOST] },
     children: [
       { path: '', component: RoommateHostDashboardComponent },
       { path: 'profile', component: RoommateHostProfileComponent },
       { path: 'rooms', component: RoomListingComponent },
-      { path: 'rooms/new', component: RoomFormComponent },
-      { path: 'rooms/edit/:id', component: RoomFormComponent },
+      // These routes are commented out until the components are implemented
+      // { path: 'rooms/new', component: RoomFormComponent },
+      // { path: 'rooms/edit/:id', component: RoomFormComponent },
       { path: 'rooms/:id', component: RoomDetailComponent },
       { path: 'renters', component: RenterSwipeComponent },
       { path: 'matches', component: MatchListComponent },
@@ -123,6 +120,10 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
 
-  // Catch-all route
-  { path: '**', redirectTo: '' }
+  // Catch-all route with named component for better error handling
+  {
+    path: '**',
+    component: LandingComponent,
+    data: { error: 'Page not found' }
+  }
 ];

@@ -1,0 +1,86 @@
+<div class="swipe-container">
+  <div class="swipe-header">
+    <h1>Find Your Perfect Renter</h1>
+    <p class="swipe-instructions">Swipe right to like, left to dislike, or use the buttons below</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading potential renters...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- No More Renters Message -->
+  <div *ngIf="!loading && !error && noMoreRenters" class="no-more-renters">
+    <div class="empty-state">
+      <h2>No More Renters</h2>
+      <p>You've seen all available renters. Check back later for new potential roommates!</p>
+      <a routerLink="/host/matches" class="btn-primary">View Your Matches</a>
+    </div>
+  </div>
+
+  <!-- Swipe Card -->
+  <div *ngIf="!loading && !error && !noMoreRenters" class="swipe-card-container">
+    <div #swipeCard
+         class="swipe-card"
+         (mousedown)="onMouseDown($event)"
+         (mousemove)="onMouseMove($event)"
+         (mouseup)="onMouseUp()"
+         (mouseleave)="onMouseUp()"
+         (touchstart)="onTouchStart($event)"
+         (touchmove)="onTouchMove($event)"
+         (touchend)="onTouchEnd()">
+
+      <div class="renter-image">
+        <img [src]="renters[currentIndex].profilePicture || 'assets/images/default-profile.png'"
+             alt="{{ renters[currentIndex].user.firstName }}">
+
+        <!-- Like/Dislike Indicators -->
+        <div class="like-indicator">LIKE</div>
+        <div class="dislike-indicator">NOPE</div>
+      </div>
+
+      <div class="renter-details">
+        <h2>{{ renters[currentIndex].user.firstName }} {{ renters[currentIndex].user.lastName }}</h2>
+        <p class="renter-location">
+          <i class="icon-location"></i> {{ renters[currentIndex].city }}
+        </p>
+
+        <div class="renter-bio">
+          {{ renters[currentIndex].bio | slice:0:150 }}{{ renters[currentIndex].bio.length > 150 ? '...' : '' }}
+        </div>
+
+        <div class="skills-section">
+          <h3>Skills Expected</h3>
+          <div class="skills-list">
+            <span *ngFor="let skill of renters[currentIndex].skillsExpected" class="skill-tag">{{ skill }}</span>
+          </div>
+        </div>
+
+        <div class="lifestyle-section">
+          <h3>Lifestyle Preferences</h3>
+          <div class="lifestyle-list">
+            <span *ngFor="let preference of renters[currentIndex].lifestylePreferences" class="lifestyle-tag">{{ preference }}</span>
+          </div>
+        </div>
+
+        <a [routerLink]="['/renter-profile', renters[currentIndex].id]" class="view-details">View Full Profile</a>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="swipe-actions">
+      <button class="btn-dislike" (click)="onDislikeClick()" [disabled]="swipeInProgress">
+        <i class="icon-dislike"></i>
+      </button>
+      <button class="btn-like" (click)="onLikeClick()" [disabled]="swipeInProgress">
+        <i class="icon-like"></i>
+      </button>
+    </div>
+  </div>
+</div>

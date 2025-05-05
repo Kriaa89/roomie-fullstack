@@ -31,10 +31,10 @@ public class AppUserService implements UserDetailsService {
         if (appUserRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already in use");
         }
-        
+
         // Encode password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        
+
         return appUserRepository.save(user);
     }
 
@@ -55,12 +55,12 @@ public class AppUserService implements UserDetailsService {
         if (!appUserRepository.existsById(user.getId())) {
             throw new IllegalArgumentException("User not found");
         }
-        
+
         // If password is being updated, encode it
         if (user.getPassword() != null && !user.getPassword().startsWith("$2a$")) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        
+
         return appUserRepository.save(user);
     }
 
@@ -68,13 +68,4 @@ public class AppUserService implements UserDetailsService {
         appUserRepository.deleteById(id);
     }
 
-    public boolean verifyEmail(Long userId) {
-        return appUserRepository.findById(userId)
-                .map(user -> {
-                    user.setEmailVerified(true);
-                    appUserRepository.save(user);
-                    return true;
-                })
-                .orElse(false);
-    }
 }

@@ -21,7 +21,7 @@ public class RoomListingService {
     public RoomListing createRoomListing(RoomListing roomListing, Long hostId) {
         RoommateHostProfile host = roommateHostProfileRepository.findById(hostId)
                 .orElseThrow(() -> new IllegalArgumentException("Roommate host profile not found"));
-        
+
         roomListing.setHost(host);
         return roomListingRepository.save(roomListing);
     }
@@ -59,7 +59,7 @@ public class RoomListingService {
         if (!roomListingRepository.existsById(roomListing.getId())) {
             throw new IllegalArgumentException("Room listing not found");
         }
-        
+
         return roomListingRepository.save(roomListing);
     }
 
@@ -75,5 +75,9 @@ public class RoomListingService {
                     return listing.isActive();
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Room listing not found"));
+    }
+
+    public List<RoomListing> getRoomListingsByHostId(Long hostId) {
+        return getRoomListingsByHost(hostId);
     }
 }

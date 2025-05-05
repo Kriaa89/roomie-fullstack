@@ -9,6 +9,7 @@ export interface RegisterRequest {
   passwordConfirmation: string;
   location: string;
   age: number;
+  role: Role;
 }
 
 export interface LoginRequest {
@@ -19,5 +20,8 @@ export interface LoginRequest {
 export interface AuthResponse {
   token: string;
   userId: number;
-  roles: Role[];
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role: Role;
 }

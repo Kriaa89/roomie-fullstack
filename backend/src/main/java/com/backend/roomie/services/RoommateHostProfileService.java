@@ -21,17 +21,17 @@ public class RoommateHostProfileService {
     public RoommateHostProfile createRoommateHostProfile(RoommateHostProfile roommateHostProfile, Long userId) {
         AppUser user = appUserRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
+
         // Ensure user has ROOMMATE_HOST role
         if (user.getRole() != Role.ROOMMATE_HOST) {
             throw new IllegalArgumentException("User must have ROOMMATE_HOST role to create a roommate host profile");
         }
-        
+
         // Check if profile already exists
         if (roommateHostProfileRepository.findByAppUser(user).isPresent()) {
             throw new IllegalArgumentException("Roommate host profile already exists for this user");
         }
-        
+
         roommateHostProfile.setAppUser(user);
         return roommateHostProfileRepository.save(roommateHostProfile);
     }
@@ -57,7 +57,7 @@ public class RoommateHostProfileService {
         if (!roommateHostProfileRepository.existsById(roommateHostProfile.getId())) {
             throw new IllegalArgumentException("Roommate host profile not found");
         }
-        
+
         return roommateHostProfileRepository.save(roommateHostProfile);
     }
 
@@ -73,5 +73,9 @@ public class RoommateHostProfileService {
                     return profile.isProfileVisible();
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Roommate host profile not found"));
+    }
+
+    public List<RoommateHostProfile> getAllVisibleRoommateHostProfiles() {
+        return getVisibleRoommateHostProfiles();
     }
 }

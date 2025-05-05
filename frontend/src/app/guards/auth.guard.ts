@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router, ActivatedRouteSnapshot, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { Role } from '../models/role.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,14 +20,12 @@ export class AuthGuard {
     const currentUser = this.authService.currentUserValue;
 
     if (currentUser) {
-      // Check if route has data.roles and user has one of the required roles
-      if (route.data['roles'] && route.data['roles'].length) {
-        const hasRequiredRole = route.data['roles'].some((role: string) =>
-          currentUser.roles.includes(role)
-        );
+      // Check if route has data.role and user has the required role
+      if (route.data['role'] && route.data['role'].length) {
+        const hasRequiredRole = route.data['role'].includes(currentUser.role);
 
         if (!hasRequiredRole) {
-          // User doesn't have any of the required roles, redirect to home
+          // User doesn't have the required role, redirect to home
           this.router.navigate(['/']);
           return false;
         }

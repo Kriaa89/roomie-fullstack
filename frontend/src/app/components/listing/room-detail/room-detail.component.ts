@@ -61,8 +61,8 @@ export class RoomDetailComponent implements OnInit {
     // Check user role
     const currentUser = this.authService.currentUserValue;
     if (currentUser) {
-      this.isHost = currentUser.roles.includes(Role.ROOMMATE_HOST);
-      this.isRenter = currentUser.roles.includes(Role.RENTER);
+      this.isHost = currentUser.role === Role.ROOMMATE_HOST;
+      this.isRenter = currentUser.role === Role.RENTER;
     }
   }
 

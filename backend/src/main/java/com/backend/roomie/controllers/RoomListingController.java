@@ -25,11 +25,11 @@ public class RoomListingController {
 
     @GetMapping
     public ResponseEntity<List<RoomListingDto>> getAllActiveListings() {
-        List<RoomListing> listings = roomListingService.getAllActiveRoomListings();
+        List<RoomListing> listings = roomListingService.getActiveRoomListings();
         List<RoomListingDto> listingDtos = listings.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(listingDtos);
     }
 
@@ -37,7 +37,7 @@ public class RoomListingController {
     public ResponseEntity<RoomListingDto> getListingById(@PathVariable Long id) {
         RoomListing listing = roomListingService.getRoomListingById(id)
                 .orElseThrow(() -> new RuntimeException("Listing not found"));
-        
+
         return ResponseEntity.ok(mapToDto(listing));
     }
 
@@ -46,11 +46,11 @@ public class RoomListingController {
     public ResponseEntity<RoomListingDto> createListing(
             @RequestBody RoomListingDto listingDto,
             Authentication authentication) {
-        
+
         AppUser currentUser = (AppUser) authentication.getPrincipal();
         RoommateHostProfile hostProfile = roommateHostProfileService.getRoommateHostProfileByUserId(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Host profile not found"));
-        
+
         RoomListing listing = RoomListing.builder()
                 .title(listingDto.getTitle())
                 .description(listingDto.getDescription())
@@ -62,8 +62,8 @@ public class RoomListingController {
                 .active(true)
                 .host(hostProfile)
                 .build();
-        
-        RoomListing savedListing = roomListingService.createRoomListing(listing);
+
+        RoomListing savedListing = roomListingService.createRoomListing(listing, hostProfile.getId());
         return ResponseEntity.ok(mapToDto(savedListing));
     }
 
@@ -73,19 +73,19 @@ public class RoomListingController {
             @PathVariable Long id,
             @RequestBody RoomListingDto listingDto,
             Authentication authentication) {
-        
+
         AppUser currentUser = (AppUser) authentication.getPrincipal();
         RoommateHostProfile hostProfile = roommateHostProfileService.getRoommateHostProfileByUserId(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Host profile not found"));
-        
+
         RoomListing listing = roomListingService.getRoomListingById(id)
                 .orElseThrow(() -> new RuntimeException("Listing not found"));
-        
+
         // Verify ownership
         if (!listing.getHost().getId().equals(hostProfile.getId())) {
             return ResponseEntity.status(403).build();
         }
-        
+
         // Update fields
         listing.setTitle(listingDto.getTitle());
         listing.setDescription(listingDto.getDescription());
@@ -95,7 +95,7 @@ public class RoomListingController {
         listing.setCity(listingDto.getCity());
         listing.setAvailableFrom(listingDto.getAvailableFrom());
         listing.setActive(listingDto.isActive());
-        
+
         RoomListing updatedListing = roomListingService.updateRoomListing(listing);
         return ResponseEntity.ok(mapToDto(updatedListing));
     }
@@ -105,19 +105,19 @@ public class RoomListingController {
     public ResponseEntity<Void> deleteListing(
             @PathVariable Long id,
             Authentication authentication) {
-        
+
         AppUser currentUser = (AppUser) authentication.getPrincipal();
         RoommateHostProfile hostProfile = roommateHostProfileService.getRoommateHostProfileByUserId(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Host profile not found"));
-        
+
         RoomListing listing = roomListingService.getRoomListingById(id)
                 .orElseThrow(() -> new RuntimeException("Listing not found"));
-        
+
         // Verify ownership
         if (!listing.getHost().getId().equals(hostProfile.getId())) {
             return ResponseEntity.status(403).build();
         }
-        
+
         roomListingService.deleteRoomListing(id);
         return ResponseEntity.noContent().build();
     }
@@ -128,7 +128,7 @@ public class RoomListingController {
         List<RoomListingDto> listingDtos = listings.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(listingDtos);
     }
 
@@ -138,12 +138,12 @@ public class RoomListingController {
         AppUser currentUser = (AppUser) authentication.getPrincipal();
         RoommateHostProfile hostProfile = roommateHostProfileService.getRoommateHostProfileByUserId(currentUser.getId())
                 .orElseThrow(() -> new RuntimeException("Host profile not found"));
-        
+
         List<RoomListing> listings = roomListingService.getRoomListingsByHostId(hostProfile.getId());
         List<RoomListingDto> listingDtos = listings.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(listingDtos);
     }
 

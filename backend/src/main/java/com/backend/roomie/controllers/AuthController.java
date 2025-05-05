@@ -44,7 +44,7 @@ public class AuthController {
                 .password(request.getPassword())
                 .phoneNumber(request.getPhoneNumber())
                 .role(request.getRole())
-                .emailVerified(false) // Default to false, can be verified later
+                .emailVerified(true) // Set to true to allow immediate login
                 .build();
 
         AppUser savedUser = appUserService.createUser(user);
@@ -56,20 +56,20 @@ public class AuthController {
                         .appUser(savedUser)
                         .profileVisible(true)
                         .build();
-                renterProfileService.createRenterProfile(renterProfile);
+                renterProfileService.createRenterProfile(renterProfile, savedUser.getId());
                 break;
             case ROOMMATE_HOST:
                 RoommateHostProfile hostProfile = RoommateHostProfile.builder()
                         .appUser(savedUser)
                         .profileVisible(true)
                         .build();
-                roommateHostProfileService.createRoommateHostProfile(hostProfile);
+                roommateHostProfileService.createRoommateHostProfile(hostProfile, savedUser.getId());
                 break;
             case OWNER:
                 OwnerProfile ownerProfile = OwnerProfile.builder()
                         .appUser(savedUser)
                         .build();
-                ownerProfileService.createOwnerProfile(ownerProfile);
+                ownerProfileService.createOwnerProfile(ownerProfile, savedUser.getId());
                 break;
         }
 

@@ -1,0 +1,80 @@
+<div class="match-list-container">
+  <div class="match-list-header">
+    <h1>My Matches</h1>
+    <p>View and manage your matches with properties, owners, and roommates.</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading matches...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && !error && matches.length === 0" class="empty-state">
+    <p>You don't have any matches yet. Start swiping to find your perfect match!</p>
+    <div class="empty-state-actions">
+      <a *ngIf="userRole === 'RENTER'" routerLink="/renter/properties" class="btn-primary">Find Properties</a>
+      <a *ngIf="userRole === 'RENTER'" routerLink="/renter/roommates" class="btn-primary">Find Roommates</a>
+      <a *ngIf="userRole === 'ROOMMATE_HOST'" routerLink="/host/renters" class="btn-primary">Find Renters</a>
+    </div>
+  </div>
+
+  <!-- Matches List -->
+  <div *ngIf="!loading && !error && matches.length > 0" class="matches-grid">
+    <!-- Property Matches (for Renters) -->
+    <div *ngFor="let match of matches" class="match-card">
+      <!-- Property Match -->
+      <div *ngIf="match.property" class="match-content">
+        <div class="match-image">
+          <img [src]="match.property.images ? match.property.images.split(',')[0] : 'assets/images/default-property.png'" alt="Property Image">
+        </div>
+        <div class="match-details">
+          <h3>{{ match.property.name }}</h3>
+          <p class="match-location">{{ match.property.location }}</p>
+          <p class="match-price">{{ match.property.price }}</p>
+          <p class="match-owner">Owned by {{ match.owner?.firstName }} {{ match.owner?.lastName }}</p>
+          <p class="match-date">Matched on {{ match.createdAt | date }}</p>
+          <div class="match-actions">
+            <a [routerLink]="['/properties', match.property.id]" class="btn-view">View Property</a>
+            <a routerLink="/renter/visits/new" [queryParams]="{propertyId: match.property.id}" class="btn-visit">Request Visit</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Roommate Host Match (for Renters) -->
+      <div *ngIf="match.host && userRole === 'RENTER'" class="match-content">
+        <div class="match-image">
+          <img [src]="match.host.profilePicture || 'assets/images/default-profile.png'" alt="Host Image">
+        </div>
+        <div class="match-details">
+          <h3>{{ match.host.firstName }} {{ match.host.lastName }}</h3>
+          <p class="match-date">Matched on {{ match.createdAt | date }}</p>
+          <div class="match-actions">
+            <a [routerLink]="['/host-profile', match.host.id]" class="btn-view">View Profile</a>
+            <a routerLink="/renter/visits/new" [queryParams]="{roommateHostId: match.host.id}" class="btn-visit">Request Visit</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Renter Match (for Hosts) -->
+      <div *ngIf="match.renter && userRole === 'ROOMMATE_HOST'" class="match-content">
+        <div class="match-image">
+          <img [src]="match.renter.profilePicture || 'assets/images/default-profile.png'" alt="Renter Image">
+        </div>
+        <div class="match-details">
+          <h3>{{ match.renter.firstName }} {{ match.renter.lastName }}</h3>
+          <p class="match-date">Matched on {{ match.createdAt | date }}</p>
+          <div class="match-actions">
+            <a [routerLink]="['/renter-profile', match.renter.id]" class="btn-view">View Profile</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { RegisterRequest } from '../../../models/auth.model';
+import { Role } from '../../../models/role.model';
 
 @Component({
   selector: 'app-register',
@@ -17,6 +18,11 @@ export class RegisterComponent {
   loading = false;
   submitted = false;
   error = '';
+  roles = [
+    { id: Role.RENTER, name: 'Renter', description: 'Looking for a place to rent or a roommate' },
+    { id: Role.OWNER, name: 'Owner', description: 'Have properties to rent out' },
+    { id: Role.ROOMMATE_HOST, name: 'Roommate-Host', description: 'Have a room to share with a roommate' }
+  ];
 
   constructor(
     private formBuilder: FormBuilder,
@@ -36,7 +42,8 @@ export class RegisterComponent {
       location: ['', Validators.required],
       age: ['', [Validators.required, Validators.min(18), Validators.max(120)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      passwordConfirmation: ['', Validators.required]
+      passwordConfirmation: ['', Validators.required],
+      role: ['', Validators.required]
     }, {
       validator: this.mustMatch('password', 'passwordConfirmation')
     });
@@ -82,16 +89,37 @@ export class RegisterComponent {
       location: this.f['location'].value,
       age: this.f['age'].value,
       password: this.f['password'].value,
-      passwordConfirmation: this.f['passwordConfirmation'].value
+      passwordConfirmation: this.f['passwordConfirmation'].value,
+      role: this.f['role'].value
     };
 
     this.authService.register(registerRequest)
       .subscribe({
-        next: () => {
-          this.router.navigate(['/select-role']);
+        next: (response) => {
+          // Navigate based on the selected role
+          switch (registerRequest.role) {
+            case Role.RENTER:
+              this.router.navigate(['/renter']);
+              break;
+            case Role.OWNER:
+              this.router.navigate(['/owner']);
+              break;
+            case Role.ROOMMATE_HOST:
+              this.router.navigate(['/host']);
+              break;
+            default:
+              this.router.navigate(['/']);
+          }
         },
         error: error => {
-          this.error = error;
+          if (error.error && error.error.message) {
+            this.error = error.error.message;
+          } else if (error.message) {
+            this.error = error.message;
+          } else {
+            this.error = 'An error occurred during registration. Please try again.';
+          }
+          console.error('Registration error:', error);
           this.loading = false;
         }
       });

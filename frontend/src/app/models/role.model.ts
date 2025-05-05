@@ -5,6 +5,3 @@ export enum Role {
   ADMIN = 'ADMIN'
 }
 
-export interface RoleRequest {
-  roleType: Role;
-}
