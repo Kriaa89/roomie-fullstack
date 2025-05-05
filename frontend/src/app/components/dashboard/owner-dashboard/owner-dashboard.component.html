@@ -1,300 +1,126 @@
 <div class="dashboard-container">
-  <header class="dashboard-header">
-    <div class="logo">
-      <h1>RentMate - Owner Dashboard</h1>
-    </div>
-    <div class="user-info" *ngIf="user">
-      <span>Welcome, {{ user.firstName }} {{ user.lastName }}</span>
-      <button class="btn btn-outline" (click)="logout()">Logout</button>
-    </div>
-  </header>
-
-  <div class="dashboard-content">
-    <div class="sidebar">
-      <div class="user-roles" *ngIf="user && user.roles">
-        <h3>Your Roles</h3>
-        <ul class="roles-list">
-          <li *ngFor="let role of user.roles" class="role-badge">{{ role }}</li>
-        </ul>
-      </div>
-
-      <nav class="dashboard-nav">
-        <h3>Navigation</h3>
-        <ul>
-          <li><a routerLink="/owner-dashboard" class="active">Dashboard</a></li>
-          <li><a routerLink="/my-properties">My Properties</a></li>
-          <li><a href="javascript:void(0)" (click)="setActiveSection('visits')">Visit Requests</a></li>
-          <li><a routerLink="/profile">My Profile</a></li>
-        </ul>
-      </nav>
-
-      <div class="sidebar-cta">
-        <button class="btn btn-primary btn-block" (click)="createProperty()">
-          <i class="fas fa-plus"></i> Add New Property
-        </button>
-      </div>
-    </div>
-
-    <main class="main-content">
-      <!-- Dashboard Overview -->
-      <div class="dashboard-overview">
-        <div class="welcome-banner">
-          <div class="welcome-content">
-            <h2>Welcome to Your Owner Dashboard</h2>
-            <p>Manage your properties, connect with potential tenants, and track your rental business all in one place.</p>
-          </div>
-          <div class="welcome-actions">
-            <button class="btn btn-primary" (click)="createProperty()">
-              <i class="fas fa-plus"></i> Add New Property
-            </button>
-            <button class="btn btn-secondary" (click)="setActiveSection('visits')">
-              <i class="fas fa-calendar-check"></i> View Visit Requests
-              <span class="badge" *ngIf="getPendingVisitRequestsCount() > 0">{{ getPendingVisitRequestsCount() }}</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="stats-cards">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-home"></i></div>
-            <div class="stat-info">
-              <h3>{{ myProperties.length }}</h3>
-              <p>Total Properties</p>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
-            <div class="stat-info">
-              <h3>{{ getAvailablePropertiesCount() }}</h3>
-              <p>Available Properties</p>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-eye"></i></div>
-            <div class="stat-info">
-              <h3>0</h3>
-              <p>Property Views</p>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-            <div class="stat-info">
-              <h3>{{ getPendingVisitRequestsCount() }}</h3>
-              <p>Pending Visit Requests</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Feature Sections -->
-      <div class="dashboard-sections">
-        <!-- My Properties Section -->
-        <section class="dashboard-section" [class.active]="activeSection === 'properties'">
-          <div class="section-header">
-            <h2><i class="fas fa-home"></i> My Properties</h2>
-            <div class="section-actions">
-              <button class="btn btn-primary" (click)="createProperty()">
-                <i class="fas fa-plus"></i> Add Property
-              </button>
-            </div>
-          </div>
-
-          <div *ngIf="isLoading" class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Loading properties...</p>
-          </div>
-
-          <div *ngIf="errorMessage" class="alert alert-danger">
-            {{ errorMessage }}
-          </div>
-
-          <div *ngIf="!isLoading && myProperties.length === 0" class="no-data">
-            <p>You haven't added any properties yet.</p>
-            <button class="btn btn-primary" (click)="createProperty()">
-              Add Your First Property
-            </button>
-          </div>
-
-          <div *ngIf="!isLoading && myProperties.length > 0" class="properties-grid">
-            <div *ngFor="let property of myProperties" class="property-card" (click)="property.id && viewProperty(property.id)">
-              <div class="property-badge" [ngClass]="{'available': property.availability, 'unavailable': !property.availability}">
-                {{ property.availability ? 'Available' : 'Not Available' }}
-              </div>
-              <div class="property-details">
-                <h3>{{ property.name }}</h3>
-                <p class="property-location">
-                  <i class="fas fa-map-marker-alt"></i> {{ property.location }}
-                </p>
-                <p class="property-price">{{ property.price }}</p>
-                <div class="property-info">
-                  <span><i class="fas fa-bed"></i> {{ property.numberOfBedrooms }} Beds</span>
-                  <span><i class="fas fa-bath"></i> {{ property.numberOfBathrooms }} Baths</span>
-                  <span><i class="fas fa-ruler-combined"></i> {{ property.surface }}</span>
-                </div>
-                <p class="property-description">{{ property.description | slice:0:100 }}{{ property.description.length > 100 ? '...' : '' }}</p>
-                <div class="property-actions">
-                  <button class="btn btn-sm btn-primary" (click)="property.id && editProperty(property.id, $event)">
-                    <i class="fas fa-edit"></i> Edit
-                  </button>
-                  <button class="btn btn-sm btn-secondary" (click)="property.id && toggleAvailability(property.id, $event)">
-                    <i class="fas fa-toggle-on"></i> {{ property.availability ? 'Mark Unavailable' : 'Mark Available' }}
-                  </button>
-                  <button class="btn btn-sm btn-danger" (click)="property.id && deleteProperty(property.id, $event)">
-                    <i class="fas fa-trash"></i> Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Profile Management Section -->
-        <section class="dashboard-section" [class.active]="activeSection === 'profile'">
-          <div class="section-header">
-            <h2><i class="fas fa-user-circle"></i> Profile Management</h2>
-          </div>
-
-          <div class="profile-card">
-            <div class="profile-header">
-              <div class="profile-avatar">
-                <img src="assets/placeholder-avatar.jpg" alt="Profile Avatar">
-                <button class="btn btn-sm btn-secondary avatar-edit-btn">
-                  <i class="fas fa-camera"></i>
-                </button>
-              </div>
-              <div class="profile-info">
-                <h3>{{ user?.firstName }} {{ user?.lastName }}</h3>
-                <p><i class="fas fa-envelope"></i> {{ user?.email }}</p>
-              </div>
-            </div>
-
-            <div class="profile-sections">
-              <div class="profile-section">
-                <h4>Personal Information</h4>
-                <div class="form-group">
-                  <label>Company Name (Optional)</label>
-                  <input type="text" class="form-control" placeholder="Enter your company name">
-                </div>
-                <div class="form-group">
-                  <label>Phone Number</label>
-                  <input type="text" class="form-control" placeholder="Enter your phone number">
-                </div>
-                <div class="form-group">
-                  <label>Bio</label>
-                  <textarea class="form-control" placeholder="Tell potential tenants about yourself"></textarea>
-                </div>
-              </div>
-
-              <div class="profile-section">
-                <h4>Tenant Preferences</h4>
-                <div class="form-group">
-                  <label>Preferred Tenant Type</label>
-                  <select class="form-control">
-                    <option>No Preference</option>
-                    <option>Students</option>
-                    <option>Working Professionals</option>
-                    <option>Families</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>Gender Preference</label>
-                  <select class="form-control">
-                    <option>No Preference</option>
-                    <option>Male Only</option>
-                    <option>Female Only</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label>Additional Requirements</label>
-                  <textarea class="form-control" placeholder="Any additional requirements for tenants"></textarea>
-                </div>
-              </div>
-            </div>
-
-            <div class="profile-actions">
-              <button class="btn btn-primary">Save Changes</button>
-              <button class="btn btn-secondary">Cancel</button>
-            </div>
-          </div>
-        </section>
-
-
-        <!-- Visit Requests Section -->
-        <section class="dashboard-section" [class.active]="activeSection === 'visits'">
-          <div class="section-header">
-            <h2><i class="fas fa-calendar-check"></i> Visit Requests</h2>
-            <div class="section-actions">
-              <button class="btn btn-sm btn-outline" (click)="loadVisitRequests()">
-                <i class="fas fa-sync"></i> Refresh
-              </button>
-            </div>
-          </div>
-
-          <div *ngIf="isLoading" class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Loading visit requests...</p>
-          </div>
-
-          <div *ngIf="errorMessage" class="alert alert-danger">
-            {{ errorMessage }}
-          </div>
-
-          <div *ngIf="!isLoading && visitRequests.length === 0" class="no-data">
-            <p>You don't have any visit requests yet. When renters request to visit your properties, they'll appear here.</p>
-          </div>
-
-          <div *ngIf="!isLoading && visitRequests.length > 0" class="visit-requests-list">
-            <div *ngFor="let request of visitRequests" class="visit-request-card">
-              <div class="request-status" [ngClass]="{
-                'status-pending': request.status === 'PENDING',
-                'status-accepted': request.status === 'ACCEPTED',
-                'status-rejected': request.status === 'REJECTED'
-              }">
-                {{ request.status }}
-              </div>
-
-              <div class="request-details">
-                <h3>Visit Request for {{ request.propertyName }}</h3>
-                <p class="request-location">
-                  <i class="fas fa-map-marker-alt"></i> {{ request.propertyLocation }}
-                </p>
-                <p class="request-date">
-                  <i class="fas fa-calendar-alt"></i> Requested for: {{ request.visitDate | date:'medium' }}
-                </p>
-                <p class="request-user" *ngIf="request.user">
-                  <i class="fas fa-user"></i> From: {{ request.user.firstName }} {{ request.user.lastName }}
-                </p>
-                <p class="request-created">
-                  <i class="fas fa-clock"></i> Requested on: {{ request.createdAt | date:'medium' }}
-                </p>
-              </div>
-
-              <div class="request-actions" *ngIf="request.status === 'PENDING'">
-                <button class="btn btn-sm btn-success" (click)="updateVisitRequestStatus(request.id, 'ACCEPTED', $event)">
-                  <i class="fas fa-check"></i> Accept
-                </button>
-                <button class="btn btn-sm btn-danger" (click)="updateVisitRequestStatus(request.id, 'REJECTED', $event)">
-                  <i class="fas fa-times"></i> Decline
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Reviews Section -->
-        <section class="dashboard-section" [class.active]="activeSection === 'reviews'">
-          <div class="section-header">
-            <h2><i class="fas fa-star"></i> Reviews & Ratings</h2>
-          </div>
-
-          <div class="no-data">
-            <p>You don't have any reviews yet. Reviews from tenants will appear here after they visit your properties or complete a rental.</p>
-          </div>
-        </section>
-      </div>
-    </main>
+  <div class="dashboard-header">
+    <h1>Property Owner Dashboard</h1>
+    <p *ngIf="currentUser">Welcome, {{ currentUser.firstName }} {{ currentUser.lastName }}</p>
   </div>
+
+  <!-- User Profile Section -->
+  <section class="dashboard-section">
+    <div class="section-header">
+      <h2>My Profile</h2>
+      <a routerLink="/owner/profile" class="btn btn-primary">Edit Profile</a>
+    </div>
+
+    <div class="section-content">
+      <div *ngIf="loading.user" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading profile...</p>
+      </div>
+
+      <div *ngIf="error.user" class="error-message">
+        {{ error.user }}
+      </div>
+
+      <div *ngIf="!loading.user && !error.user && currentUser" class="profile-card">
+        <div class="profile-image">
+          <img [src]="currentUser.profilePicture || 'assets/images/default-profile.png'" alt="Profile Picture">
+        </div>
+        <div class="profile-details">
+          <h3>{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
+          <p><strong>Email:</strong> {{ currentUser.email }}</p>
+          <p><strong>Phone:</strong> {{ currentUser.phoneNumber }}</p>
+          <p><strong>Location:</strong> {{ currentUser.location }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- My Properties Section -->
+  <section class="dashboard-section">
+    <div class="section-header">
+      <h2>My Properties</h2>
+      <a routerLink="/owner/properties/new" class="btn btn-primary">Add New Property</a>
+    </div>
+
+    <div class="section-content">
+      <div *ngIf="loading.properties" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading properties...</p>
+      </div>
+
+      <div *ngIf="error.properties" class="error-message">
+        {{ error.properties }}
+      </div>
+
+      <div *ngIf="!loading.properties && !error.properties" class="cards-container">
+        <div *ngIf="myProperties.length === 0" class="empty-state">
+          <p>You haven't listed any properties yet. Add your first property to get started!</p>
+        </div>
+
+        <div *ngFor="let property of myProperties" class="property-card">
+          <div class="property-image">
+            <img [src]="property.images.split(',')[0] || 'assets/images/default-property.png'" alt="{{ property.name }}">
+          </div>
+          <div class="property-details">
+            <h3>{{ property.name }}</h3>
+            <p><strong>Location:</strong> {{ property.location }}</p>
+            <p><strong>Price:</strong> {{ property.price }}</p>
+            <p><strong>Type:</strong> {{ property.type }}</p>
+            <p><strong>Status:</strong> <span [ngClass]="property.availability ? 'status-available' : 'status-unavailable'">
+              {{ property.availability ? 'Available' : 'Not Available' }}
+            </span></p>
+            <div class="property-actions">
+              <a [routerLink]="['/owner/properties', property.id]" class="btn btn-secondary">View</a>
+              <a [routerLink]="['/owner/properties/edit', property.id]" class="btn btn-secondary">Edit</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Visit Requests Section -->
+  <section class="dashboard-section">
+    <div class="section-header">
+      <h2>Visit Requests</h2>
+      <a routerLink="/owner/visits" class="btn btn-primary">View All Requests</a>
+    </div>
+
+    <div class="section-content">
+      <div *ngIf="loading.visits" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading visit requests...</p>
+      </div>
+
+      <div *ngIf="error.visits" class="error-message">
+        {{ error.visits }}
+      </div>
+
+      <div *ngIf="!loading.visits && !error.visits" class="cards-container">
+        <div *ngIf="visitRequests.length === 0" class="empty-state">
+          <p>No visit requests yet. When renters request to visit your properties, they'll appear here.</p>
+        </div>
+
+        <div *ngFor="let visit of visitRequests" class="visit-card">
+          <div class="visit-details">
+            <h3>{{ visit.property?.name || 'Property' }}</h3>
+            <p><strong>Requester:</strong> {{ visit.requester.firstName }} {{ visit.requester.lastName }}</p>
+            <p><strong>Date:</strong> {{ visit.requestDate | date }}</p>
+            <p><strong>Time:</strong> {{ visit.requestTime }}</p>
+            <p><strong>Message:</strong> {{ visit.message || 'No message provided' }}</p>
+            <p><strong>Status:</strong> <span [ngClass]="'status-' + visit.status.toLowerCase()">{{ visit.status }}</span></p>
+
+            <div *ngIf="visit.status === 'PENDING'" class="visit-actions">
+              <button (click)="approveVisitRequest(visit.id)" class="btn btn-success">Approve</button>
+              <button (click)="rejectVisitRequest(visit.id)" class="btn btn-danger">Reject</button>
+            </div>
+
+            <div *ngIf="visit.status !== 'PENDING'" class="visit-response">
+              <p><strong>Response:</strong> {{ visit.responseMessage || 'No response provided' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </div>

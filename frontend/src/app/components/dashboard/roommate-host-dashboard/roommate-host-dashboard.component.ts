@@ -1,241 +1,166 @@
 import { Component, OnInit } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../../services/auth.service';
-import { ApiService } from '../../../services/api.service';
-import { PropertyService } from '../../../services/property.service';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
+import { UserService } from '../../../services/user.service';
+import { ProfileService } from '../../../services/profile.service';
+import { SwipeService } from '../../../services/swipe.service';
+import { VisitRequestService } from '../../../services/visit-request.service';
+import { User } from '../../../models/user.model';
+import { RoommateHostProfile, RenterProfile } from '../../../models/profile.model';
+import { Match } from '../../../models/swipe.model';
+import { VisitRequest } from '../../../models/visit-request.model';
 
 @Component({
   selector: 'app-roommate-host-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './roommate-host-dashboard.component.html',
   styleUrls: ['./roommate-host-dashboard.component.css']
 })
 export class RoommateHostDashboardComponent implements OnInit {
-  user: any = null;
-  isLoading: boolean = false;
-  errorMessage: string = '';
-  activeSection: string = 'overview'; // Default active section
-  roomListings: any[] = [];
-
-  // Profile form model
-  profileModel: any = {
-    city: '',
-    occupation: '',
-    bio: '',
-    genderPreference: 'No Preference',
-    smoking: 'No Preference',
-    pets: 'No Preference'
+  currentUser: User | null = null;
+  hostProfile: RoommateHostProfile | null = null;
+  availableRenters: RenterProfile[] = [];
+  matches: Match[] = [];
+  visitRequests: VisitRequest[] = [];
+  loading = {
+    user: true,
+    profile: true,
+    renters: true,
+    matches: true,
+    visits: true
   };
-
-  // Room listing form model
-  roomListingModel: any = {
-    name: '',
-    description: '',
-    price: '',
-    securityDeposit: '',
-    location: '',
-    availableFrom: '',
-    propertyRules: '',
-    amenities: {
-      wifi: false,
-      kitchen: false,
-      laundry: false,
-      parking: false,
-      privateBathroom: false,
-      airConditioning: false
-    },
-    surface: '',
-    numberOfRooms: 1,
-    numberOfBathrooms: 1,
-    numberOfBedrooms: 1,
-    audiance: 'SINGLES',
-    availability: true
+  error = {
+    user: '',
+    profile: '',
+    renters: '',
+    matches: '',
+    visits: ''
   };
 
   constructor(
     private authService: AuthService,
-    private apiService: ApiService,
-    private propertyService: PropertyService,
-    private router: Router
-  ) {}
+    private userService: UserService,
+    private profileService: ProfileService,
+    private swipeService: SwipeService,
+    private visitRequestService: VisitRequestService
+  ) { }
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadAvailableRenters();
+    this.loadMatches();
+    this.loadVisitRequests();
   }
 
-  loadUserData(): void {
-    this.authService.currentUser$.subscribe(user => {
-      if (user) {
-        this.user = user;
-        if (this.authService.hasRole('ROOMMATE_HOST')) {
-          // Load room listings if user is a roommate host
-          this.loadRoomListings();
-        } else {
-          // Redirect to appropriate dashboard if not a roommate host
-          this.router.navigate(['/dashboard']);
+  private loadUserData(): void {
+    this.userService.getCurrentUser().subscribe({
+      next: (user) => {
+        this.currentUser = user;
+        this.loading.user = false;
+
+        // After loading user, load the host profile
+        if (user && user.id) {
+          this.loadHostProfile(user.id);
         }
-      } else {
-        this.router.navigate(['/login']);
+      },
+      error: (error) => {
+        this.error.user = 'Failed to load user data';
+        this.loading.user = false;
+        console.error('Error loading user data:', error);
       }
     });
   }
 
-  loadRoomListings(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    this.propertyService.getRoomListings().subscribe({
-      next: (data) => {
-        this.roomListings = data;
-        this.isLoading = false;
+  private loadHostProfile(userId: number): void {
+    this.profileService.getRoommateHostProfile(userId).subscribe({
+      next: (profile) => {
+        this.hostProfile = profile;
+        this.loading.profile = false;
       },
       error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = 'Failed to load room listings. Please try again.';
-        console.error('Error loading room listings:', error);
+        this.error.profile = 'Failed to load host profile';
+        this.loading.profile = false;
+        console.error('Error loading host profile:', error);
       }
     });
   }
 
-  // Set active section
-  setActiveSection(section: string): void {
-    this.activeSection = section;
-  }
-
-  // Create a new room listing
-  createRoomListing(formData: any): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    // Convert amenities object to string format
-    const amenitiesArray = [];
-    if (formData.amenities) {
-      if (formData.amenities.wifi) amenitiesArray.push('WiFi');
-      if (formData.amenities.kitchen) amenitiesArray.push('Kitchen');
-      if (formData.amenities.laundry) amenitiesArray.push('Laundry');
-      if (formData.amenities.parking) amenitiesArray.push('Parking');
-      if (formData.amenities.privateBathroom) amenitiesArray.push('Private Bathroom');
-      if (formData.amenities.airConditioning) amenitiesArray.push('Air Conditioning');
-    }
-    const amenitiesString = amenitiesArray.length > 0 ? amenitiesArray.join(', ') : 'Basic amenities';
-
-    // Prepare room listing data
-    const roomData = {
-      name: formData.name || 'Room for Rent',
-      type: 'ROOM',
-      location: formData.location || this.user.location,
-      price: formData.price || '0',
-      description: formData.description || 'Room available for rent',
-      amenities: amenitiesString,
-      surface: formData.surface || 'Not specified',
-      numberOfRooms: formData.numberOfRooms || 1,
-      numberOfBathrooms: formData.numberOfBathrooms || 1,
-      numberOfBedrooms: formData.numberOfBedrooms || 1,
-      propertyRules: formData.propertyRules || 'No specific rules',
-      availability: true,
-      audiance: formData.audiance || 'SINGLES'
-    };
-
-    this.propertyService.createRoomListing(roomData).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        alert('Room listing created successfully!');
-        // Reload the page or navigate to the room listing detail page
-        window.location.reload();
+  private loadAvailableRenters(): void {
+    this.profileService.getAvailableRenters().subscribe({
+      next: (renters) => {
+        this.availableRenters = renters;
+        this.loading.renters = false;
       },
       error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = 'Failed to create room listing. Please try again.';
-        console.error('Error creating room listing:', error);
+        this.error.renters = 'Failed to load available renters';
+        this.loading.renters = false;
+        console.error('Error loading renters:', error);
       }
     });
   }
 
-  // Save room listing as draft
-  saveAsDraft(formData: any): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    // Convert amenities object to string format
-    const amenitiesArray = [];
-    if (formData.amenities) {
-      if (formData.amenities.wifi) amenitiesArray.push('WiFi');
-      if (formData.amenities.kitchen) amenitiesArray.push('Kitchen');
-      if (formData.amenities.laundry) amenitiesArray.push('Laundry');
-      if (formData.amenities.parking) amenitiesArray.push('Parking');
-      if (formData.amenities.privateBathroom) amenitiesArray.push('Private Bathroom');
-      if (formData.amenities.airConditioning) amenitiesArray.push('Air Conditioning');
-    }
-    const amenitiesString = amenitiesArray.length > 0 ? amenitiesArray.join(', ') : '';
-
-    // Prepare room listing data with draft status
-    const roomData = {
-      name: formData.name || 'Draft Room Listing',
-      type: 'ROOM',
-      location: formData.location || this.user.location,
-      price: formData.price || '0',
-      description: formData.description || 'Draft room listing',
-      amenities: amenitiesString,
-      surface: formData.surface || '',
-      numberOfRooms: formData.numberOfRooms || 1,
-      numberOfBathrooms: formData.numberOfBathrooms || 1,
-      numberOfBedrooms: formData.numberOfBedrooms || 1,
-      propertyRules: formData.propertyRules || '',
-      availability: false, // Draft listings are not available
-      audiance: formData.audiance || 'SINGLES'
-    };
-
-    this.propertyService.createRoomListing(roomData).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        alert('Room listing saved as draft!');
-        // Reload the page or navigate to the room listing detail page
-        window.location.reload();
+  private loadMatches(): void {
+    this.swipeService.getHostMatches().subscribe({
+      next: (matches) => {
+        this.matches = matches;
+        this.loading.matches = false;
       },
       error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = 'Failed to save room listing as draft. Please try again.';
-        console.error('Error saving room listing as draft:', error);
+        this.error.matches = 'Failed to load matches';
+        this.loading.matches = false;
+        console.error('Error loading matches:', error);
       }
     });
   }
 
-  logout(): void {
-    this.authService.logout();
-  }
-
-  // Save profile changes
-  saveProfileChanges(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-
-    // Create a copy of the user object with updated profile information
-    const updatedUser = {
-      ...this.user,
-      city: this.profileModel.city,
-      occupation: this.profileModel.occupation,
-      bio: this.profileModel.bio,
-      genderPreference: this.profileModel.genderPreference,
-      smoking: this.profileModel.smoking,
-      petFriendly: this.profileModel.pets // Map 'pets' to 'petFriendly' to match backend field name
-    };
-
-    // Call the API service to update the user profile
-    this.apiService.updateUser(this.user.id, updatedUser).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        // Update the local user object with the response
-        this.user = response;
-        // Show success message
-        alert('Profile updated successfully!');
+  private loadVisitRequests(): void {
+    this.visitRequestService.getVisitRequestsForRoommateHost().subscribe({
+      next: (requests) => {
+        this.visitRequests = requests;
+        this.loading.visits = false;
       },
       error: (error) => {
-        this.isLoading = false;
-        this.errorMessage = 'Failed to update profile. Please try again.';
-        console.error('Error updating profile:', error);
+        this.error.visits = 'Failed to load visit requests';
+        this.loading.visits = false;
+        console.error('Error loading visit requests:', error);
+      }
+    });
+  }
+
+  // Method to handle visit request approval
+  approveVisitRequest(visitId: number): void {
+    const updateRequest = { status: 'APPROVED' as any, responseMessage: 'Your visit request has been approved.' };
+    this.visitRequestService.updateVisitRequest(visitId, updateRequest).subscribe({
+      next: () => {
+        // Update the local visit request status
+        const visitIndex = this.visitRequests.findIndex(visit => visit.id === visitId);
+        if (visitIndex !== -1) {
+          this.visitRequests[visitIndex].status = 'APPROVED' as any;
+          this.visitRequests[visitIndex].responseMessage = 'Your visit request has been approved.';
+        }
+      },
+      error: (error) => {
+        console.error('Error approving visit request:', error);
+      }
+    });
+  }
+
+  // Method to handle visit request rejection
+  rejectVisitRequest(visitId: number): void {
+    const updateRequest = { status: 'REJECTED' as any, responseMessage: 'Sorry, the room is not available at the requested time.' };
+    this.visitRequestService.updateVisitRequest(visitId, updateRequest).subscribe({
+      next: () => {
+        // Update the local visit request status
+        const visitIndex = this.visitRequests.findIndex(visit => visit.id === visitId);
+        if (visitIndex !== -1) {
+          this.visitRequests[visitIndex].status = 'REJECTED' as any;
+          this.visitRequests[visitIndex].responseMessage = 'Sorry, the room is not available at the requested time.';
+        }
+      },
+      error: (error) => {
+        console.error('Error rejecting visit request:', error);
       }
     });
   }

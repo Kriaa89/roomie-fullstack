@@ -1,1488 +1,211 @@
-# Roomie API Documentation
-
-This document provides comprehensive documentation for testing all endpoints in the Roomie application. Each endpoint is documented with its HTTP method, URL path, required permissions, request body (if applicable), and expected response.
-
-## Table of Contents
-
-1. [Authentication](#authentication)
-2. [User Management](#user-management)
-3. [Property Management](#property-management)
-4. [Role-Specific Endpoints](#role-specific-endpoints)
-   - [Admin](#admin)
-   - [Owner](#owner)
-   - [Renter](#renter)
-   - [Roommate Host](#roommate-host)
-5. [Dashboard](#dashboard)
-
-## Authentication
-
-### Register a new user
-
-**Endpoint:** `POST /auth/register`
-
-**Permission:** Public
-
-**Request Body:**
-```json
-{
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "1234567890",
-  "password": "password123",
-  "passwordConfirmation": "password123",
-  "location": "New York",
-  "age": 30
-}
-```
-
-**Response:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "userId": 1,
-  "roles": []
-}
-```
-
-### Login
-
-**Endpoint:** `POST /auth/login`
-
-**Permission:** Public
-
-**Request Body:**
-```json
-{
-  "email": "john.doe@example.com",
-  "password": "password123"
-}
-```
-
-**Response:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "userId": 1,
-  "roles": ["RENTER"]
-}
-```
-
-### Select Role
-
-**Endpoint:** `POST /auth/select-role/{userId}`
-
-**Permission:** Authenticated
-
-**Request Body:**
-```json
-{
-  "roleType": "OWNER"
-}
-```
-
-**Response:**
-```json
-{
-  "token": "eyJhbGciOiJIUzI1NiJ9...",
-  "userId": 1,
-  "roles": ["RENTER", "OWNER"]
-}
-```
-
-## User Management
-
-### Get Current User
-
-**Endpoint:** `GET /api/users/me`
-
-**Permission:** Authenticated
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "1234567890",
-  "profilePicture": null,
-  "location": "New York",
-  "age": 30,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T10:30:00",
-  "roles": ["RENTER", "OWNER"]
-}
-```
-
-### Get User by ID
-
-**Endpoint:** `GET /api/users/{id}`
-
-**Permission:** ADMIN or the user themselves
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "1234567890",
-  "profilePicture": null,
-  "location": "New York",
-  "age": 30,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T10:30:00",
-  "roles": ["RENTER", "OWNER"]
-}
-```
-
-### Update User
-
-**Endpoint:** `PUT /api/users/{id}`
-
-**Permission:** ADMIN or the user themselves
-
-**Request Body:**
-```json
-{
-  "firstName": "John",
-  "lastName": "Smith",
-  "phoneNumber": "0987654321",
-  "profilePicture": "profile.jpg",
-  "location": "Los Angeles",
-  "age": 31
-}
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Smith",
-  "email": "john.doe@example.com",
-  "phoneNumber": "0987654321",
-  "profilePicture": "profile.jpg",
-  "location": "Los Angeles",
-  "age": 31,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T11:45:00",
-  "roles": ["RENTER", "OWNER"]
-}
-```
-
-### Change Password
-
-**Endpoint:** `POST /api/users/{id}/change-password`
-
-**Permission:** The user themselves
-
-**Request Body:**
-```json
-{
-  "currentPassword": "password123",
-  "newPassword": "newPassword123",
-  "confirmPassword": "newPassword123"
-}
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Smith",
-  "email": "john.doe@example.com",
-  "phoneNumber": "0987654321",
-  "profilePicture": "profile.jpg",
-  "location": "Los Angeles",
-  "age": 31,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T12:00:00",
-  "roles": ["RENTER", "OWNER"]
-}
-```
-
-## Property Management
-
-### Get All Properties
-
-**Endpoint:** `GET /api/properties`
-
-**Permission:** Authenticated
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Cozy Apartment",
-    "type": "APARTMENT",
-    "location": "New York",
-    "price": "1500",
-    "description": "A cozy apartment in downtown",
-    "images": "image1.jpg,image2.jpg",
-    "amenities": "WiFi,Parking,Pool",
-    "surface": "800 sqft",
-    "numberOfRooms": 3,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 2,
-    "propertyRules": "No pets, No smoking",
-    "availability": true,
-    "audiance": "SINGLES",
-    "createdAt": "2023-06-15T14:00:00",
-    "updatedAt": "2023-06-15T14:00:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Smith"
-    }
-  }
-]
-```
-
-### Get Property by ID
-
-**Endpoint:** `GET /api/properties/{id}`
-
-**Permission:** Authenticated
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "Cozy Apartment",
-  "type": "APARTMENT",
-  "location": "New York",
-  "price": "1500",
-  "description": "A cozy apartment in downtown",
-  "images": "image1.jpg,image2.jpg",
-  "amenities": "WiFi,Parking,Pool",
-  "surface": "800 sqft",
-  "numberOfRooms": 3,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 2,
-  "propertyRules": "No pets, No smoking",
-  "availability": true,
-  "audiance": "SINGLES",
-  "createdAt": "2023-06-15T14:00:00",
-  "updatedAt": "2023-06-15T14:00:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Smith"
-  }
-}
-```
-
-### Get Properties by Owner
-
-**Endpoint:** `GET /api/properties/owner/{ownerId}`
-
-**Permission:** Authenticated
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Cozy Apartment",
-    "type": "APARTMENT",
-    "location": "New York",
-    "price": "1500",
-    "description": "A cozy apartment in downtown",
-    "images": "image1.jpg,image2.jpg",
-    "amenities": "WiFi,Parking,Pool",
-    "surface": "800 sqft",
-    "numberOfRooms": 3,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 2,
-    "propertyRules": "No pets, No smoking",
-    "availability": true,
-    "audiance": "SINGLES",
-    "createdAt": "2023-06-15T14:00:00",
-    "updatedAt": "2023-06-15T14:00:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Smith"
-    }
-  }
-]
-```
-
-### Get Available Properties
-
-**Endpoint:** `GET /api/properties/available`
-
-**Permission:** Authenticated
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Cozy Apartment",
-    "type": "APARTMENT",
-    "location": "New York",
-    "price": "1500",
-    "description": "A cozy apartment in downtown",
-    "images": "image1.jpg,image2.jpg",
-    "amenities": "WiFi,Parking,Pool",
-    "surface": "800 sqft",
-    "numberOfRooms": 3,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 2,
-    "propertyRules": "No pets, No smoking",
-    "availability": true,
-    "audiance": "SINGLES",
-    "createdAt": "2023-06-15T14:00:00",
-    "updatedAt": "2023-06-15T14:00:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Smith"
-    }
-  }
-]
-```
-
-### Get Properties by Type
-
-**Endpoint:** `GET /api/properties/type/{type}`
-
-**Permission:** Authenticated
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Cozy Apartment",
-    "type": "APARTMENT",
-    "location": "New York",
-    "price": "1500",
-    "description": "A cozy apartment in downtown",
-    "images": "image1.jpg,image2.jpg",
-    "amenities": "WiFi,Parking,Pool",
-    "surface": "800 sqft",
-    "numberOfRooms": 3,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 2,
-    "propertyRules": "No pets, No smoking",
-    "availability": true,
-    "audiance": "SINGLES",
-    "createdAt": "2023-06-15T14:00:00",
-    "updatedAt": "2023-06-15T14:00:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Smith"
-    }
-  }
-]
-```
-
-### Get Properties by Location
-
-**Endpoint:** `GET /api/properties/location/{location}`
-
-**Permission:** Authenticated
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Cozy Apartment",
-    "type": "APARTMENT",
-    "location": "New York",
-    "price": "1500",
-    "description": "A cozy apartment in downtown",
-    "images": "image1.jpg,image2.jpg",
-    "amenities": "WiFi,Parking,Pool",
-    "surface": "800 sqft",
-    "numberOfRooms": 3,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 2,
-    "propertyRules": "No pets, No smoking",
-    "availability": true,
-    "audiance": "SINGLES",
-    "createdAt": "2023-06-15T14:00:00",
-    "updatedAt": "2023-06-15T14:00:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Smith"
-    }
-  }
-]
-```
-
-### Create Property
-
-**Endpoint:** `POST /api/properties`
-
-**Permission:** OWNER
-
-**Request Body:**
-```json
-{
-  "name": "Cozy Apartment",
-  "type": "APARTMENT",
-  "location": "New York",
-  "price": "1500",
-  "description": "A cozy apartment in downtown",
-  "images": "image1.jpg,image2.jpg",
-  "amenities": "WiFi,Parking,Pool",
-  "surface": "800 sqft",
-  "numberOfRooms": 3,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 2,
-  "propertyRules": "No pets, No smoking",
-  "availability": true,
-  "audiance": "SINGLES"
-}
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "Cozy Apartment",
-  "type": "APARTMENT",
-  "location": "New York",
-  "price": "1500",
-  "description": "A cozy apartment in downtown",
-  "images": "image1.jpg,image2.jpg",
-  "amenities": "WiFi,Parking,Pool",
-  "surface": "800 sqft",
-  "numberOfRooms": 3,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 2,
-  "propertyRules": "No pets, No smoking",
-  "availability": true,
-  "audiance": "SINGLES",
-  "createdAt": "2023-06-15T14:00:00",
-  "updatedAt": "2023-06-15T14:00:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Smith"
-  }
-}
-```
-
-### Update Property
-
-**Endpoint:** `PUT /api/properties/{id}`
-
-**Permission:** OWNER
-
-**Request Body:**
-```json
-{
-  "name": "Updated Apartment",
-  "price": "1600",
-  "description": "An updated description",
-  "availability": false
-}
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "Updated Apartment",
-  "type": "APARTMENT",
-  "location": "New York",
-  "price": "1600",
-  "description": "An updated description",
-  "images": "image1.jpg,image2.jpg",
-  "amenities": "WiFi,Parking,Pool",
-  "surface": "800 sqft",
-  "numberOfRooms": 3,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 2,
-  "propertyRules": "No pets, No smoking",
-  "availability": false,
-  "audiance": "SINGLES",
-  "createdAt": "2023-06-15T14:00:00",
-  "updatedAt": "2023-06-15T15:30:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Smith"
-  }
-}
-```
-
-### Delete Property
-
-**Endpoint:** `DELETE /api/properties/{id}`
-
-**Permission:** OWNER
-
-**Response:** HTTP 200 OK
-
-## Role-Specific Endpoints
-
-### Admin
-
-#### Get All Users
-
-**Endpoint:** `GET /api/admin/users`
-
-**Permission:** ADMIN
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Smith",
-    "email": "john.doe@example.com",
-    "phoneNumber": "0987654321",
-    "profilePicture": "profile.jpg",
-    "location": "Los Angeles",
-    "age": 31,
-    "emailVerified": false,
-    "phoneVerified": false,
-    "idVerified": false,
-    "createdAt": "2023-06-15T10:30:00",
-    "updatedAt": "2023-06-15T12:00:00",
-    "roles": ["RENTER", "OWNER"]
-  }
-]
-```
-
-#### Get User by ID (Admin)
-
-**Endpoint:** `GET /api/admin/users/{id}`
-
-**Permission:** ADMIN
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Smith",
-  "email": "john.doe@example.com",
-  "phoneNumber": "0987654321",
-  "profilePicture": "profile.jpg",
-  "location": "Los Angeles",
-  "age": 31,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T12:00:00",
-  "roles": ["RENTER", "OWNER"]
-}
-```
-
-#### Update User (Admin)
-
-**Endpoint:** `PUT /api/admin/users/{id}`
-
-**Permission:** ADMIN
-
-**Request Body:**
-```json
-{
-  "firstName": "John",
-  "lastName": "Updated",
-  "phoneNumber": "1122334455",
-  "location": "Chicago",
-  "age": 32
-}
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Updated",
-  "email": "john.doe@example.com",
-  "phoneNumber": "1122334455",
-  "profilePicture": "profile.jpg",
-  "location": "Chicago",
-  "age": 32,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T16:00:00",
-  "roles": ["RENTER", "OWNER"]
-}
-```
-
-#### Delete User
-
-**Endpoint:** `DELETE /api/admin/users/{id}`
-
-**Permission:** ADMIN
-
-**Response:** HTTP 200 OK
-
-#### Add Role to User
-
-**Endpoint:** `POST /api/admin/users/{id}/roles`
-
-**Permission:** ADMIN
-
-**Request Body:**
-```json
-{
-  "roleType": "ROOMMATE_HOST"
-}
-```
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Updated",
-  "email": "john.doe@example.com",
-  "phoneNumber": "1122334455",
-  "profilePicture": "profile.jpg",
-  "location": "Chicago",
-  "age": 32,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T16:30:00",
-  "roles": ["RENTER", "OWNER", "ROOMMATE_HOST"]
-}
-```
-
-#### Remove Role from User
-
-**Endpoint:** `DELETE /api/admin/users/{id}/roles/{roleType}`
-
-**Permission:** ADMIN
-
-**Response:**
-```json
-{
-  "id": 1,
-  "firstName": "John",
-  "lastName": "Updated",
-  "email": "john.doe@example.com",
-  "phoneNumber": "1122334455",
-  "profilePicture": "profile.jpg",
-  "location": "Chicago",
-  "age": 32,
-  "emailVerified": false,
-  "phoneVerified": false,
-  "idVerified": false,
-  "createdAt": "2023-06-15T10:30:00",
-  "updatedAt": "2023-06-15T16:45:00",
-  "roles": ["RENTER", "ROOMMATE_HOST"]
-}
-```
-
-#### Get All Properties (Admin)
-
-**Endpoint:** `GET /api/admin/properties`
-
-**Permission:** ADMIN
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Updated Apartment",
-    "type": "APARTMENT",
-    "location": "New York",
-    "price": "1600",
-    "description": "An updated description",
-    "images": "image1.jpg,image2.jpg",
-    "amenities": "WiFi,Parking,Pool",
-    "surface": "800 sqft",
-    "numberOfRooms": 3,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 2,
-    "propertyRules": "No pets, No smoking",
-    "availability": false,
-    "audiance": "SINGLES",
-    "createdAt": "2023-06-15T14:00:00",
-    "updatedAt": "2023-06-15T15:30:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Updated"
-    }
-  }
-]
-```
-
-#### Get Property by ID (Admin)
-
-**Endpoint:** `GET /api/admin/properties/{id}`
-
-**Permission:** ADMIN
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "Updated Apartment",
-  "type": "APARTMENT",
-  "location": "New York",
-  "price": "1600",
-  "description": "An updated description",
-  "images": "image1.jpg,image2.jpg",
-  "amenities": "WiFi,Parking,Pool",
-  "surface": "800 sqft",
-  "numberOfRooms": 3,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 2,
-  "propertyRules": "No pets, No smoking",
-  "availability": false,
-  "audiance": "SINGLES",
-  "createdAt": "2023-06-15T14:00:00",
-  "updatedAt": "2023-06-15T15:30:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Delete Property (Admin)
-
-**Endpoint:** `DELETE /api/admin/properties/{id}`
-
-**Permission:** ADMIN
-
-**Response:** HTTP 200 OK
-
-#### Get Admin Stats
-
-**Endpoint:** `GET /api/admin/stats`
-
-**Permission:** ADMIN
-
-**Response:**
-```json
-{
-  "totalUsers": 10,
-  "totalProperties": 25
-}
-```
-
-### Owner
-
-#### Get My Properties
-
-**Endpoint:** `GET /api/owner/properties`
-
-**Permission:** OWNER
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Updated Apartment",
-    "type": "APARTMENT",
-    "location": "New York",
-    "price": "1600",
-    "description": "An updated description",
-    "images": "image1.jpg,image2.jpg",
-    "amenities": "WiFi,Parking,Pool",
-    "surface": "800 sqft",
-    "numberOfRooms": 3,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 2,
-    "propertyRules": "No pets, No smoking",
-    "availability": false,
-    "audiance": "SINGLES",
-    "createdAt": "2023-06-15T14:00:00",
-    "updatedAt": "2023-06-15T15:30:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Updated"
-    }
-  }
-]
-```
-
-#### Get My Property by ID
-
-**Endpoint:** `GET /api/owner/properties/{id}`
-
-**Permission:** OWNER
-
-**Response:**
-```json
-{
-  "id": 1,
-  "name": "Updated Apartment",
-  "type": "APARTMENT",
-  "location": "New York",
-  "price": "1600",
-  "description": "An updated description",
-  "images": "image1.jpg,image2.jpg",
-  "amenities": "WiFi,Parking,Pool",
-  "surface": "800 sqft",
-  "numberOfRooms": 3,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 2,
-  "propertyRules": "No pets, No smoking",
-  "availability": false,
-  "audiance": "SINGLES",
-  "createdAt": "2023-06-15T14:00:00",
-  "updatedAt": "2023-06-15T15:30:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Create Property (Owner)
-
-**Endpoint:** `POST /api/owner/properties`
-
-**Permission:** OWNER
-
-**Request Body:**
-```json
-{
-  "name": "New Property",
-  "type": "HOUSE",
-  "location": "Boston",
-  "price": "2000",
-  "description": "A beautiful house",
-  "images": "house1.jpg,house2.jpg",
-  "amenities": "WiFi,Parking,Garden",
-  "surface": "1500 sqft",
-  "numberOfRooms": 5,
-  "numberOfBathrooms": 2,
-  "numberOfBedrooms": 3,
-  "propertyRules": "No pets",
-  "availability": true,
-  "audiance": "FAMILIES"
-}
-```
-
-**Response:**
-```json
-{
-  "id": 2,
-  "name": "New Property",
-  "type": "HOUSE",
-  "location": "Boston",
-  "price": "2000",
-  "description": "A beautiful house",
-  "images": "house1.jpg,house2.jpg",
-  "amenities": "WiFi,Parking,Garden",
-  "surface": "1500 sqft",
-  "numberOfRooms": 5,
-  "numberOfBathrooms": 2,
-  "numberOfBedrooms": 3,
-  "propertyRules": "No pets",
-  "availability": true,
-  "audiance": "FAMILIES",
-  "createdAt": "2023-06-15T17:00:00",
-  "updatedAt": "2023-06-15T17:00:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Update Property (Owner)
-
-**Endpoint:** `PUT /api/owner/properties/{id}`
-
-**Permission:** OWNER
-
-**Request Body:**
-```json
-{
-  "price": "2100",
-  "description": "A beautiful updated house",
-  "availability": false
-}
-```
-
-**Response:**
-```json
-{
-  "id": 2,
-  "name": "New Property",
-  "type": "HOUSE",
-  "location": "Boston",
-  "price": "2100",
-  "description": "A beautiful updated house",
-  "images": "house1.jpg,house2.jpg",
-  "amenities": "WiFi,Parking,Garden",
-  "surface": "1500 sqft",
-  "numberOfRooms": 5,
-  "numberOfBathrooms": 2,
-  "numberOfBedrooms": 3,
-  "propertyRules": "No pets",
-  "availability": false,
-  "audiance": "FAMILIES",
-  "createdAt": "2023-06-15T17:00:00",
-  "updatedAt": "2023-06-15T17:30:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Delete Property (Owner)
-
-**Endpoint:** `DELETE /api/owner/properties/{id}`
-
-**Permission:** OWNER
-
-**Response:** HTTP 200 OK
-
-#### Get Property Stats
-
-**Endpoint:** `GET /api/owner/stats`
-
-**Permission:** OWNER
-
-**Response:**
-```json
-{
-  "totalProperties": 2
-}
-```
-
-### Renter
-
-#### Get Available Properties (Renter)
-
-**Endpoint:** `GET /api/renter/properties`
-
-**Permission:** RENTER
-
-**Response:**
-```json
-[
-  {
-    "id": 2,
-    "name": "New Property",
-    "type": "HOUSE",
-    "location": "Boston",
-    "price": "2100",
-    "description": "A beautiful updated house",
-    "images": "house1.jpg,house2.jpg",
-    "amenities": "WiFi,Parking,Garden",
-    "surface": "1500 sqft",
-    "numberOfRooms": 5,
-    "numberOfBathrooms": 2,
-    "numberOfBedrooms": 3,
-    "propertyRules": "No pets",
-    "availability": true,
-    "audiance": "FAMILIES",
-    "createdAt": "2023-06-15T17:00:00",
-    "updatedAt": "2023-06-15T17:30:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Updated"
-    }
-  }
-]
-```
-
-#### Get Property by ID (Renter)
-
-**Endpoint:** `GET /api/renter/properties/{id}`
-
-**Permission:** RENTER
-
-**Response:**
-```json
-{
-  "id": 2,
-  "name": "New Property",
-  "type": "HOUSE",
-  "location": "Boston",
-  "price": "2100",
-  "description": "A beautiful updated house",
-  "images": "house1.jpg,house2.jpg",
-  "amenities": "WiFi,Parking,Garden",
-  "surface": "1500 sqft",
-  "numberOfRooms": 5,
-  "numberOfBathrooms": 2,
-  "numberOfBedrooms": 3,
-  "propertyRules": "No pets",
-  "availability": true,
-  "audiance": "FAMILIES",
-  "createdAt": "2023-06-15T17:00:00",
-  "updatedAt": "2023-06-15T17:30:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Get Properties by Type (Renter)
-
-**Endpoint:** `GET /api/renter/properties/type/{type}`
-
-**Permission:** RENTER
-
-**Response:**
-```json
-[
-  {
-    "id": 2,
-    "name": "New Property",
-    "type": "HOUSE",
-    "location": "Boston",
-    "price": "2100",
-    "description": "A beautiful updated house",
-    "images": "house1.jpg,house2.jpg",
-    "amenities": "WiFi,Parking,Garden",
-    "surface": "1500 sqft",
-    "numberOfRooms": 5,
-    "numberOfBathrooms": 2,
-    "numberOfBedrooms": 3,
-    "propertyRules": "No pets",
-    "availability": true,
-    "audiance": "FAMILIES",
-    "createdAt": "2023-06-15T17:00:00",
-    "updatedAt": "2023-06-15T17:30:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Updated"
-    }
-  }
-]
-```
-
-#### Get Properties by Location (Renter)
-
-**Endpoint:** `GET /api/renter/properties/location/{location}`
-
-**Permission:** RENTER
-
-**Response:**
-```json
-[
-  {
-    "id": 2,
-    "name": "New Property",
-    "type": "HOUSE",
-    "location": "Boston",
-    "price": "2100",
-    "description": "A beautiful updated house",
-    "images": "house1.jpg,house2.jpg",
-    "amenities": "WiFi,Parking,Garden",
-    "surface": "1500 sqft",
-    "numberOfRooms": 5,
-    "numberOfBathrooms": 2,
-    "numberOfBedrooms": 3,
-    "propertyRules": "No pets",
-    "availability": true,
-    "audiance": "FAMILIES",
-    "createdAt": "2023-06-15T17:00:00",
-    "updatedAt": "2023-06-15T17:30:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Updated"
-    }
-  }
-]
-```
-
-#### Get Renter Stats
-
-**Endpoint:** `GET /api/renter/stats`
-
-**Permission:** RENTER
-
-**Response:**
-```json
-{
-  "availableProperties": 5
-}
-```
-
-#### Submit Rental Request
-
-**Endpoint:** `POST /api/renter/properties/{propertyId}/request`
-
-**Permission:** RENTER
-
-**Request Body:**
-```json
-{
-  "message": "I'm interested in renting this property",
-  "moveInDate": "2023-07-01",
-  "duration": "12 months"
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Rental request submitted successfully",
-  "propertyId": 2,
-  "propertyName": "New Property"
-}
-```
-
-### Roommate Host
-
-#### Get My Room Listings
-
-**Endpoint:** `GET /api/roommate-host/rooms`
-
-**Permission:** ROOMMATE_HOST
-
-**Response:**
-```json
-[
-  {
-    "id": 3,
-    "name": "Cozy Room",
-    "type": "ROOM",
-    "location": "San Francisco",
-    "price": "800",
-    "description": "A cozy room in a shared apartment",
-    "images": "room1.jpg,room2.jpg",
-    "amenities": "WiFi,Shared Kitchen,Shared Bathroom",
-    "surface": "200 sqft",
-    "numberOfRooms": 1,
-    "numberOfBathrooms": 1,
-    "numberOfBedrooms": 1,
-    "propertyRules": "No smoking",
-    "availability": true,
-    "audiance": "STUDENTS",
-    "createdAt": "2023-06-15T18:00:00",
-    "updatedAt": "2023-06-15T18:00:00",
-    "owner": {
-      "id": 1,
-      "firstName": "John",
-      "lastName": "Updated"
-    }
-  }
-]
-```
-
-#### Get My Room Listing by ID
-
-**Endpoint:** `GET /api/roommate-host/rooms/{id}`
-
-**Permission:** ROOMMATE_HOST
-
-**Response:**
-```json
-{
-  "id": 3,
-  "name": "Cozy Room",
-  "type": "ROOM",
-  "location": "San Francisco",
-  "price": "800",
-  "description": "A cozy room in a shared apartment",
-  "images": "room1.jpg,room2.jpg",
-  "amenities": "WiFi,Shared Kitchen,Shared Bathroom",
-  "surface": "200 sqft",
-  "numberOfRooms": 1,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 1,
-  "propertyRules": "No smoking",
-  "availability": true,
-  "audiance": "STUDENTS",
-  "createdAt": "2023-06-15T18:00:00",
-  "updatedAt": "2023-06-15T18:00:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Create Room Listing
-
-**Endpoint:** `POST /api/roommate-host/rooms`
-
-**Permission:** ROOMMATE_HOST
-
-**Request Body:**
-```json
-{
-  "name": "Cozy Room",
-  "location": "San Francisco",
-  "price": "800",
-  "description": "A cozy room in a shared apartment",
-  "images": "room1.jpg,room2.jpg",
-  "amenities": "WiFi,Shared Kitchen,Shared Bathroom",
-  "surface": "200 sqft",
-  "numberOfRooms": 1,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 1,
-  "propertyRules": "No smoking",
-  "availability": true,
-  "audiance": "STUDENTS"
-}
-```
-
-**Response:**
-```json
-{
-  "id": 3,
-  "name": "Cozy Room",
-  "type": "ROOM",
-  "location": "San Francisco",
-  "price": "800",
-  "description": "A cozy room in a shared apartment",
-  "images": "room1.jpg,room2.jpg",
-  "amenities": "WiFi,Shared Kitchen,Shared Bathroom",
-  "surface": "200 sqft",
-  "numberOfRooms": 1,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 1,
-  "propertyRules": "No smoking",
-  "availability": true,
-  "audiance": "STUDENTS",
-  "createdAt": "2023-06-15T18:00:00",
-  "updatedAt": "2023-06-15T18:00:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Update Room Listing
-
-**Endpoint:** `PUT /api/roommate-host/rooms/{id}`
-
-**Permission:** ROOMMATE_HOST
-
-**Request Body:**
-```json
-{
-  "price": "850",
-  "description": "An updated cozy room in a shared apartment",
-  "availability": false
-}
-```
-
-**Response:**
-```json
-{
-  "id": 3,
-  "name": "Cozy Room",
-  "type": "ROOM",
-  "location": "San Francisco",
-  "price": "850",
-  "description": "An updated cozy room in a shared apartment",
-  "images": "room1.jpg,room2.jpg",
-  "amenities": "WiFi,Shared Kitchen,Shared Bathroom",
-  "surface": "200 sqft",
-  "numberOfRooms": 1,
-  "numberOfBathrooms": 1,
-  "numberOfBedrooms": 1,
-  "propertyRules": "No smoking",
-  "availability": false,
-  "audiance": "STUDENTS",
-  "createdAt": "2023-06-15T18:00:00",
-  "updatedAt": "2023-06-15T18:30:00",
-  "owner": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated"
-  }
-}
-```
-
-#### Delete Room Listing
-
-**Endpoint:** `DELETE /api/roommate-host/rooms/{id}`
-
-**Permission:** ROOMMATE_HOST
-
-**Response:** HTTP 200 OK
-
-#### Get Room Listing Stats
-
-**Endpoint:** `GET /api/roommate-host/stats`
-
-**Permission:** ROOMMATE_HOST
-
-**Response:**
-```json
-{
-  "totalRoomListings": 1
-}
-```
-
-## Dashboard
-
-### Get Renter Dashboard
-
-**Endpoint:** `GET /api/dashboard/renter`
-
-**Permission:** RENTER
-
-**Response:**
-```json
-{
-  "user": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated",
-    "email": "john.doe@example.com",
-    "phoneNumber": "1122334455",
-    "profilePicture": "profile.jpg",
-    "location": "Chicago",
-    "age": 32,
-    "emailVerified": false,
-    "phoneVerified": false,
-    "idVerified": false,
-    "createdAt": "2023-06-15T10:30:00",
-    "updatedAt": "2023-06-15T16:45:00",
-    "roles": ["RENTER", "ROOMMATE_HOST"]
-  },
-  "role": "RENTER",
-  "message": "Welcome to your Renter Dashboard!",
-  "availableProperties": 5,
-  "matchedProperties": 0,
-  "pendingRequests": 0
-}
-```
-
-### Get Owner Dashboard
-
-**Endpoint:** `GET /api/dashboard/owner`
-
-**Permission:** OWNER
-
-**Response:**
-```json
-{
-  "user": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated",
-    "email": "john.doe@example.com",
-    "phoneNumber": "1122334455",
-    "profilePicture": "profile.jpg",
-    "location": "Chicago",
-    "age": 32,
-    "emailVerified": false,
-    "phoneVerified": false,
-    "idVerified": false,
-    "createdAt": "2023-06-15T10:30:00",
-    "updatedAt": "2023-06-15T16:45:00",
-    "roles": ["RENTER", "OWNER", "ROOMMATE_HOST"]
-  },
-  "role": "OWNER",
-  "message": "Welcome to your Owner Dashboard!",
-  "listedProperties": 2,
-  "interestedRenters": 0,
-  "pendingRequests": 0
-}
-```
-
-### Get Roommate Host Dashboard
-
-**Endpoint:** `GET /api/dashboard/roommate-host`
-
-**Permission:** ROOMMATE_HOST
-
-**Response:**
-```json
-{
-  "user": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated",
-    "email": "john.doe@example.com",
-    "phoneNumber": "1122334455",
-    "profilePicture": "profile.jpg",
-    "location": "Chicago",
-    "age": 32,
-    "emailVerified": false,
-    "phoneVerified": false,
-    "idVerified": false,
-    "createdAt": "2023-06-15T10:30:00",
-    "updatedAt": "2023-06-15T16:45:00",
-    "roles": ["RENTER", "ROOMMATE_HOST"]
-  },
-  "role": "ROOMMATE_HOST",
-  "message": "Welcome to your Roommate Host Dashboard!",
-  "listedRooms": 1,
-  "potentialRoommates": 0,
-  "pendingRequests": 0
-}
-```
-
-### Get Admin Dashboard
-
-**Endpoint:** `GET /api/dashboard/admin`
-
-**Permission:** ADMIN
-
-**Response:**
-```json
-{
-  "user": {
-    "id": 1,
-    "firstName": "John",
-    "lastName": "Updated",
-    "email": "john.doe@example.com",
-    "phoneNumber": "1122334455",
-    "profilePicture": "profile.jpg",
-    "location": "Chicago",
-    "age": 32,
-    "emailVerified": false,
-    "phoneVerified": false,
-    "idVerified": false,
-    "createdAt": "2023-06-15T10:30:00",
-    "updatedAt": "2023-06-15T16:45:00",
-    "roles": ["ADMIN"]
-  },
-  "role": "ADMIN",
-  "message": "Welcome to the Admin Dashboard!",
-  "totalUsers": 10,
-  "totalProperties": 25,
-  "pendingVerifications": 0,
-  "reportedContent": 0
-}
+# RentMate Platform Development Guidelines
+
+### Overview
+**RentMate** is a rental platform connecting **Renters**, **Roommate Hosts**, and **Property Owners**. This document provides technical guidelines for both backend (Spring Boot) and frontend (Angular) development.
+
+---
+
+## 🔧 Backend
+**Framework:** Spring Boot (Java 17, MySQL)  
+**Key Features:**
+- Fully role-specific architecture (no mock data).
+- Separate models, controllers, and services for each role.
+
+### 📂 Entities
+1. **AppUser (Shared)**
+   - Common fields: `id`, `firstName`, `lastName`, `email`, `password`, `role` (RENTER, OWNER, ROOMMATE_HOST), `phoneNumber`, `emailVerified`.
+
+2. **Profiles (Role-Specific)**
+   - **RenterProfile:** Bio, city, profile picture, `skillsExpected`, `lifestylePreferences`, visibility settings.
+   - **RoommateHostProfile:** Similar structure, but with `skillsOffered`.
+   - **OwnerProfile:** Minimal fields (city, profile picture).
+
+3. **Listings (Role-Specific)**
+   - **RoomListings:** Created by Roommate Hosts (e.g., title, description, price, city, host).
+   - **PropertyListings:** Created by Owners (similar structure).
+
+4. **Interactions**
+   - **SwipeLike:** Tracks user likes/dislikes/matches.
+   - **VisitRequest:** Manages visit scheduling/confirmation.
+   - **Notification:** Alerts users about matches, visit requests, etc.
+
+---
+
+### 📦 Controllers/Services
+Design RESTful APIs for profile, listing management, and user interactions, including:
+
+| **Controller**               | **Purpose**                                      |
+|-------------------------------|--------------------------------------------------|
+| `AuthController`              | User registration & JWT-based login.            |
+| `ProfileControllers`          | CRUD for Renter, Host, and Owner profiles.       |
+| `ListingControllers`          | CRUD for Room and Property Listings.            |
+| `SwipeController`             | Manage likes/dislikes and detect matches.       |
+| `VisitRequestController`      | Handle visit requests (date, time, responses).  |
+| `NotificationController`      | Manage read/unread notifications.               |
+
+**Security Notes:**
+- **Role Validation:** Restrict route access based on user role.
+- **Dropdowns Only:** Skills/lifestyle fields always use dropdowns, no free text allowed.
+
+---
+
+## 🌐 Frontend
+**Frameworks:** Angular 17, Bootstrap/Tailwind  
+**Development Requirements:**
+- No inline HTML/CSS.
+- Separate files for logic (`.ts`), layout (`.html`), and styles (`.css`).
+- Use `HttpClient` for API calls.
+- Implement JWT Interceptor for token-based authentication.
+
+---
+
+### Key Components
+#### 🔐 **Auth Flow**
+- **LandingPage:** Welcome screen.
+- **Login & Register Components:** Multi-step registration (select role as RENTER/OWNER/ROOMMATE_HOST).
+
+#### 🧍‍♂️ **Renter Dashboard**
+| **Component**           | **Purpose**                                         |
+|--------------------------|-----------------------------------------------------|
+| `RenterDashboard`        | Main renter interface.                              |
+| `RenterProfile`          | Manage bio, skills, lifestyle preferences.          |
+| `SwipeComponent`         | Tinder-style card swipes for hosts.                 |
+| `MatchList`              | List of confirmed matches.                          |
+| `VisitRequest`           | Schedule visits (date/time picker).                 |
+
+#### 👥 **Host Dashboard**
+| **Component**       | **Purpose**                                            |
+|----------------------|--------------------------------------------------------|
+| `HostDashboard`      | Central hub for hosts.                                 |
+| `HostProfile`        | Manage skills offered and lifestyle.                   |
+| `MyListings`         | Post/manage co-living rooms.                           |
+| `SwipeRequests`      | Accept/decline incoming likes from renters.            |
+| `MatchList`          | View matched renters.                                  |
+
+#### 🏠 **Owner Dashboard**
+| **Component**       | **Purpose**                                            |
+|----------------------|--------------------------------------------------------|
+| `OwnerDashboard`     | Minimal UI for property owners.                        |
+| `OwnerProfile`       | Edit basic profile info (city, picture).               |
+| `MyListings`         | Create and manage Property Listings.                   |
+| `Notifications`      | Receive visit and match alerts.                        |
+
+#### ✅ **Shared Components**
+- **NavbarComponent**: Dynamic based on role.
+- **ToastNotification**: Alert for matches or visit requests.
+- **VisitRequestComponent**: Shared logic for scheduling visits.
+
+---
+
+## 🔒 Security/Technical Requirements
+- Role-based route guards (e.g., only Roommate Hosts can access `/swipe-requests`).
+- Use JWT Interceptor to attach tokens to API calls automatically.
+- Profile and listings forms must use **Reactive Forms**.
+- **Dropdown fields only**: Skills/lifestyle should not accept free text.
+- Avoid hardcoded/mocked data; rely on dynamic API data.
+
+---
+
+## 📋 Implementation Progress
+
+### Completed
+- ✅ Entity models created:
+  - AppUser (with UserDetails implementation for Spring Security)
+  - Role enum (RENTER, OWNER, ROOMMATE_HOST)
+  - RenterProfile
+  - RoommateHostProfile
+  - OwnerProfile
+  - RoomListing
+  - PropertyListing
+  - SwipeLike
+  - VisitRequest
+  - Notification
+
+- ✅ Repository interfaces created for all entities
+
+- ✅ Service classes implemented:
+  - AppUserService
+  - RenterProfileService
+  - RoommateHostProfileService
+  - OwnerProfileService
+  - RoomListingService
+  - PropertyListingService
+  - SwipeLikeService (with matching logic)
+  - VisitRequestService
+  - NotificationService
+
+### Completed (continued)
+- ✅ Controllers implemented for all entities:
+  - AuthController
+  - RenterProfileController
+  - RoommateHostProfileController
+  - OwnerProfileController
+  - RoomListingController
+  - PropertyListingController
+  - SwipeController
+  - VisitRequestController
+  - NotificationController
+
+- ✅ Security configuration with JWT:
+  - JwtService
+  - JwtAuthenticationFilter
+  - SecurityConfig
+  - ApplicationConfig
+
+- ✅ DTOs created for request/response objects:
+  - Authentication DTOs (AuthenticationRequest, AuthenticationResponse, RegisterRequest)
+  - Profile DTOs (RenterProfileDto, RoommateHostProfileDto, OwnerProfileDto)
+  - Listing DTOs (RoomListingDto, PropertyListingDto)
+  - SwipeLikeDto
+  - VisitRequestDto
+  - NotificationDto
+
+- ✅ Frontend models and interfaces created:
+  - User models
+  - Role models
+  - Auth models
+  - Property models
+  - Profile models
+  - Swipe models
+  - Visit Request models
+  - Notification models
+
+- ✅ Frontend services implemented:
+  - AuthService
+  - UserService
+  - PropertyService
+  - ProfileService
+  - SwipeService
+  - VisitRequestService
+  - NotificationService
+
+- ✅ Frontend security and routing:
+  - JWT Interceptor for API calls
+  - Error handling interceptor
+  - Role-based route guards
+  - Route configuration with lazy loading
+
+- ✅ Frontend components implemented:
+  - Auth components:
+    - Login component
+    - Register component
+    - Role selection component
+  - Dashboard components:
+    - Renter dashboard component
+    - Owner dashboard component
+    - Roommate host dashboard component
+  - Profile components:
+    - Renter profile component
+    - Owner profile component
+    - Roommate host profile component
+  - Listing components:
+    - Property listing component
+    - Room listing component
+    - Property detail component
+    - Room detail component
+
+### Next Steps
+- 🔄 Implement remaining frontend components:
+  - Swipe component
+  - Visit request components
+- 🔄 Add unit and integration tests

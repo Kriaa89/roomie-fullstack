@@ -1,179 +1,166 @@
 package com.backend.roomie.controllers;
 
-import com.backend.roomie.dtos.UserDTO;
-import com.backend.roomie.models.PropertyList;
-import com.backend.roomie.models.Swipe;
-import com.backend.roomie.models.User;
-import com.backend.roomie.services.PropertyService;
-import com.backend.roomie.services.SwipeService;
-import com.backend.roomie.services.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import com.backend.roomie.dtos.SwipeLikeDto;
+import com.backend.roomie.models.AppUser;
+import com.backend.roomie.models.RenterProfile;
+import com.backend.roomie.models.RoommateHostProfile;
+import com.backend.roomie.models.SwipeLike;
+import com.backend.roomie.services.AppUserService;
+import com.backend.roomie.services.RenterProfileService;
+import com.backend.roomie.services.RoommateHostProfileService;
+import com.backend.roomie.services.SwipeLikeService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/swipes")
+@RequiredArgsConstructor
 public class SwipeController {
 
-    private final SwipeService swipeService;
-    private final UserService userService;
-    private final PropertyService propertyService;
+    private final SwipeLikeService swipeLikeService;
+    private final AppUserService appUserService;
+    private final RenterProfileService renterProfileService;
+    private final RoommateHostProfileService roommateHostProfileService;
 
-    @Autowired
-    public SwipeController(SwipeService swipeService, UserService userService, PropertyService propertyService) {
-        this.swipeService = swipeService;
-        this.userService = userService;
-        this.propertyService = propertyService;
+    @PostMapping("/like/{swipedId}")
+    @PreAuthorize("hasAnyRole('RENTER', 'ROOMMATE_HOST')")
+    public ResponseEntity<SwipeLikeDto> createLike(
+            @PathVariable Long swipedId,
+            Authentication authentication) {
+        
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        SwipeLike swipe = swipeLikeService.createSwipe(currentUser.getId(), swipedId, SwipeLike.SwipeStatus.LIKE);
+        
+        return ResponseEntity.ok(mapToDto(swipe));
     }
 
-    /**
-     * Create a new user-to-user swipe
-     */
-    @PostMapping("/user")
-    public ResponseEntity<?> createUserSwipe(
-            @RequestParam Long swiperId,
-            @RequestParam Long targetUserId,
-            @RequestParam String direction) {
+    @PostMapping("/dislike/{swipedId}")
+    @PreAuthorize("hasAnyRole('RENTER', 'ROOMMATE_HOST')")
+    public ResponseEntity<SwipeLikeDto> createDislike(
+            @PathVariable Long swipedId,
+            Authentication authentication) {
+        
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        SwipeLike swipe = swipeLikeService.createSwipe(currentUser.getId(), swipedId, SwipeLike.SwipeStatus.DISLIKE);
+        
+        return ResponseEntity.ok(mapToDto(swipe));
+    }
 
-        try {
-            UserDTO swiperDTO = userService.getUserById(swiperId);
-            UserDTO targetUserDTO = userService.getUserById(targetUserId);
+    @PostMapping("/accept/{swiperId}")
+    @PreAuthorize("hasAnyRole('RENTER', 'ROOMMATE_HOST')")
+    public ResponseEntity<SwipeLikeDto> acceptSwipe(
+            @PathVariable Long swiperId,
+            Authentication authentication) {
+        
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        
+        // Check if the swiper has liked the current user
+        SwipeLike existingSwipe = swipeLikeService.getSwipeBetweenUsers(swiperId, currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("No swipe found"));
+        
+        if (existingSwipe.getStatus() != SwipeLike.SwipeStatus.LIKE) {
+            return ResponseEntity.badRequest().build();
+        }
+        
+        // Create a like from current user to swiper, which will trigger match logic
+        SwipeLike swipe = swipeLikeService.createSwipe(currentUser.getId(), swiperId, SwipeLike.SwipeStatus.LIKE);
+        
+        return ResponseEntity.ok(mapToDto(swipe));
+    }
 
-            User swiper = new User();
-            swiper.setId(swiperDTO.getId());
+    @GetMapping("/received")
+    @PreAuthorize("hasAnyRole('RENTER', 'ROOMMATE_HOST')")
+    public ResponseEntity<List<SwipeLikeDto>> getReceivedSwipes(Authentication authentication) {
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        List<SwipeLike> swipes = swipeLikeService.getSwipesBySwipedId(currentUser.getId());
+        
+        List<SwipeLikeDto> swipeDtos = swipes.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(swipeDtos);
+    }
 
-            User targetUser = new User();
-            targetUser.setId(targetUserDTO.getId());
+    @GetMapping("/sent")
+    @PreAuthorize("hasAnyRole('RENTER', 'ROOMMATE_HOST')")
+    public ResponseEntity<List<SwipeLikeDto>> getSentSwipes(Authentication authentication) {
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        List<SwipeLike> swipes = swipeLikeService.getSwipesBySwiperId(currentUser.getId());
+        
+        List<SwipeLikeDto> swipeDtos = swipes.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(swipeDtos);
+    }
 
-            Swipe.Status status;
-            try {
-                status = Swipe.Status.valueOf(direction.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                Map<String, String> response = new HashMap<>();
-                response.put("error", "Invalid swipe direction. Must be LEFT or RIGHT");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    @GetMapping("/matches")
+    @PreAuthorize("hasAnyRole('RENTER', 'ROOMMATE_HOST')")
+    public ResponseEntity<List<SwipeLikeDto>> getMatches(Authentication authentication) {
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        List<SwipeLike> matches = swipeLikeService.getMatchesForUser(currentUser.getId());
+        
+        List<SwipeLikeDto> matchDtos = matches.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(matchDtos);
+    }
+
+    private SwipeLikeDto mapToDto(SwipeLike swipe) {
+        AppUser swiper = appUserService.getUserById(swipe.getSwiperId())
+                .orElseThrow(() -> new RuntimeException("Swiper not found"));
+        
+        AppUser swiped = appUserService.getUserById(swipe.getSwipedId())
+                .orElseThrow(() -> new RuntimeException("Swiped user not found"));
+        
+        String swiperName = swiper.getFirstName() + " " + swiper.getLastName();
+        String swipedName = swiped.getFirstName() + " " + swiped.getLastName();
+        
+        String swiperProfilePicture = null;
+        String swipedProfilePicture = null;
+        
+        // Get profile pictures based on role
+        if (swiper.getRole() == com.backend.roomie.models.Role.RENTER) {
+            RenterProfile profile = renterProfileService.getRenterProfileByUserId(swiper.getId()).orElse(null);
+            if (profile != null) {
+                swiperProfilePicture = profile.getProfilePictureUrl();
             }
-
-            Swipe swipe = swipeService.createUserSwipe(swiper, targetUser, status);
-            return new ResponseEntity<>(swipe, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "User not found");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * Create a new user-to-property swipe
-     */
-    @PostMapping("/property")
-    public ResponseEntity<?> createPropertySwipe(
-            @RequestParam Long swiperId,
-            @RequestParam Long propertyId,
-            @RequestParam String direction) {
-
-        try {
-            UserDTO swiperDTO = userService.getUserById(swiperId);
-            PropertyList property = propertyService.getPropertyById(propertyId);
-
-            User swiper = new User();
-            swiper.setId(swiperDTO.getId());
-
-            Swipe.Status status;
-            try {
-                status = Swipe.Status.valueOf(direction.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                Map<String, String> response = new HashMap<>();
-                response.put("error", "Invalid swipe direction. Must be LEFT or RIGHT");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        } else if (swiper.getRole() == com.backend.roomie.models.Role.ROOMMATE_HOST) {
+            RoommateHostProfile profile = roommateHostProfileService.getRoommateHostProfileByUserId(swiper.getId()).orElse(null);
+            if (profile != null) {
+                swiperProfilePicture = profile.getProfilePictureUrl();
             }
-
-            Swipe swipe = swipeService.createPropertySwipe(swiper, property, status);
-            return new ResponseEntity<>(swipe, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "User or property not found");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
-    }
-
-    /**
-     * Get all swipes by a user
-     */
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getSwipesByUser(@PathVariable Long userId) {
-        try {
-            UserDTO userDTO = userService.getUserById(userId);
-
-            User user = new User();
-            user.setId(userDTO.getId());
-
-            List<Swipe> swipes = swipeService.getSwipesByUser(user);
-            return new ResponseEntity<>(swipes, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "User not found");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        
+        if (swiped.getRole() == com.backend.roomie.models.Role.RENTER) {
+            RenterProfile profile = renterProfileService.getRenterProfileByUserId(swiped.getId()).orElse(null);
+            if (profile != null) {
+                swipedProfilePicture = profile.getProfilePictureUrl();
+            }
+        } else if (swiped.getRole() == com.backend.roomie.models.Role.ROOMMATE_HOST) {
+            RoommateHostProfile profile = roommateHostProfileService.getRoommateHostProfileByUserId(swiped.getId()).orElse(null);
+            if (profile != null) {
+                swipedProfilePicture = profile.getProfilePictureUrl();
+            }
         }
-    }
-
-    /**
-     * Get all right swipes by a user
-     */
-    @GetMapping("/user/{userId}/right")
-    public ResponseEntity<?> getRightSwipesByUser(@PathVariable Long userId) {
-        try {
-            UserDTO userDTO = userService.getUserById(userId);
-
-            User user = new User();
-            user.setId(userDTO.getId());
-
-            List<Swipe> swipes = swipeService.getRightSwipesByUser(user);
-            return new ResponseEntity<>(swipes, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "User not found");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * Get all swipes on a property
-     */
-    @GetMapping("/property/{propertyId}")
-    public ResponseEntity<?> getSwipesOnProperty(@PathVariable Long propertyId) {
-        try {
-            PropertyList property = propertyService.getPropertyById(propertyId);
-
-            List<Swipe> swipes = swipeService.getSwipesOnProperty(property);
-            return new ResponseEntity<>(swipes, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "Property not found");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
-    }
-
-    /**
-     * Get all right swipes on a property
-     */
-    @GetMapping("/property/{propertyId}/right")
-    public ResponseEntity<?> getRightSwipesOnProperty(@PathVariable Long propertyId) {
-        try {
-            PropertyList property = propertyService.getPropertyById(propertyId);
-
-            List<Swipe> swipes = swipeService.getRightSwipesOnProperty(property);
-            return new ResponseEntity<>(swipes, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            Map<String, String> response = new HashMap<>();
-            response.put("error", "Property not found");
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-        }
+        
+        return SwipeLikeDto.builder()
+                .id(swipe.getId())
+                .swiperId(swipe.getSwiperId())
+                .swipedId(swipe.getSwipedId())
+                .status(swipe.getStatus())
+                .timestamp(swipe.getTimestamp())
+                .swiperName(swiperName)
+                .swiperProfilePicture(swiperProfilePicture)
+                .swipedName(swipedName)
+                .swipedProfilePicture(swipedProfilePicture)
+                .build();
     }
 }
