@@ -25,3 +25,7 @@ export interface AuthResponse {
   email?: string;
   role: Role;
 }
+
+export interface RefreshTokenRequest {
+  token: string;
+}

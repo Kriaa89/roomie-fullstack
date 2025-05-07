@@ -1,28 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../services/auth.service';
 import { Role } from '../../../models/role.model';
-
-// Since we don't have a RoomService yet, we'll define a simple Room interface here
-interface Room {
-  id: number;
-  title: string;
-  description: string;
-  price: string;
-  location: string;
-  images: string;
-  amenities: string;
-  availability: boolean;
-  hostId: number;
-  hostName: string;
-  hostProfileId: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import { RoomService } from '../../../services/room.service';
+import { Room } from '../../../models/room.model';
 
 @Component({
   selector: 'app-room-detail',
@@ -43,7 +25,7 @@ export class RoomDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private http: HttpClient,
+    private roomService: RoomService,
     private authService: AuthService
   ) { }
 
@@ -67,20 +49,24 @@ export class RoomDetailComponent implements OnInit {
   }
 
   private loadRoom(roomId: number): void {
-    this.getRoom(roomId).subscribe({
+    this.roomService.getRoomById(roomId).subscribe({
       next: (room) => {
         this.room = room;
         this.loading = false;
 
         // Process images
-        if (room.images) {
-          this.imageUrls = room.images.split(',').map(url => url.trim());
+        if (room.roomImages && typeof room.roomImages === 'string') {
+          this.imageUrls = room.roomImages.split(',').map((url: string) => url.trim());
+        } else if (room.photos && typeof room.photos === 'string') {
+          this.imageUrls = room.photos.split(',').map((url: string) => url.trim());
+        } else {
+          this.imageUrls = [];
         }
 
         // Check if current user is the host of this room
         if (this.isHost && this.authService.currentUserValue) {
           const userId = this.authService.currentUserValue.userId;
-          this.isHost = room.hostId === userId;
+          this.isHost = room.host.id === userId;
         }
       },
       error: (error) => {
@@ -89,11 +75,6 @@ export class RoomDetailComponent implements OnInit {
         console.error('Error loading room:', error);
       }
     });
-  }
-
-  // Method to get room from the API
-  private getRoom(roomId: number): Observable<Room> {
-    return this.http.get<Room>(`${environment.apiUrl}/rooms/${roomId}`);
   }
 
   // Image navigation methods
@@ -118,17 +99,17 @@ export class RoomDetailComponent implements OnInit {
 
   // Navigate to visit request form (for renters)
   requestVisit(): void {
-    if (this.room) {
+    if (this.room && this.room.host) {
       this.router.navigate(['/renter/visits/new'], {
-        queryParams: { roommateHostId: this.room.hostProfileId }
+        queryParams: { roommateHostId: this.room.host.id }
       });
     }
   }
 
   // Navigate to host profile
   viewHostProfile(): void {
-    if (this.room) {
-      this.router.navigate(['/host-profile', this.room.hostProfileId]);
+    if (this.room && this.room.host) {
+      this.router.navigate(['/host-profile', this.room.host.id]);
     }
   }
 }

@@ -17,11 +17,13 @@ public class RoomListingDto {
     private String title;
     private String description;
     private List<String> photos;
+    private String photosString; // Added for frontend compatibility
     private Double price;
     private String address;
     private String city;
     private LocalDate availableFrom;
     private boolean active;
+    private boolean isAvailable; // Added for frontend compatibility
     private Long hostId;
     private String hostName;
     private String hostProfilePicture;

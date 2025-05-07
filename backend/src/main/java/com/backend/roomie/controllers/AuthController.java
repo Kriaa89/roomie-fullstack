@@ -3,6 +3,7 @@ package com.backend.roomie.controllers;
 import com.backend.roomie.config.JwtService;
 import com.backend.roomie.dtos.AuthenticationRequest;
 import com.backend.roomie.dtos.AuthenticationResponse;
+import com.backend.roomie.dtos.RefreshTokenRequest;
 import com.backend.roomie.dtos.RegisterRequest;
 import com.backend.roomie.models.AppUser;
 import com.backend.roomie.models.OwnerProfile;
@@ -106,5 +107,31 @@ public class AuthController {
                 .email(user.getEmail())
                 .role(user.getRole())
                 .build());
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<AuthenticationResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        // Extract username from token
+        String username = jwtService.extractUsername(request.getToken());
+
+        // Get user details
+        AppUser user = (AppUser) appUserService.loadUserByUsername(username);
+
+        // Validate token
+        if (jwtService.isTokenValid(request.getToken(), user)) {
+            // Refresh token
+            String refreshedToken = jwtService.refreshToken(request.getToken());
+
+            return ResponseEntity.ok(AuthenticationResponse.builder()
+                    .token(refreshedToken)
+                    .userId(user.getId())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .email(user.getEmail())
+                    .role(user.getRole())
+                    .build());
+        }
+
+        return ResponseEntity.badRequest().build();
     }
 }

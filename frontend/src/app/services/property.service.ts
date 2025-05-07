@@ -8,8 +8,8 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class PropertyService {
-  private readonly API_URL = `${environment.apiUrl}/properties`;
-  private readonly OWNER_API_URL = `${environment.apiUrl}/owner/properties`;
+  private readonly API_URL = `${environment.apiUrl}/property-listings`;
+  private readonly OWNER_API_URL = `${environment.apiUrl}/owner`;
 
   constructor(private http: HttpClient) { }
 

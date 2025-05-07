@@ -44,6 +44,19 @@ public class JwtService {
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
+    public String refreshToken(String token) {
+        final String username = extractUsername(token);
+        final Claims claims = extractAllClaims(token);
+        claims.setIssuedAt(new Date(System.currentTimeMillis()));
+        claims.setExpiration(new Date(System.currentTimeMillis() + jwtExpiration));
+
+        return Jwts
+                .builder()
+                .setClaims(claims)
+                .signWith(getSignInKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     private String buildToken(
             Map<String, Object> extraClaims,
             UserDetails userDetails,

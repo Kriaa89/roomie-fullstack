@@ -23,7 +23,7 @@
     <div class="room-header">
       <h1>{{ room.title }}</h1>
       <div class="room-location">
-        <i class="icon-location"></i> {{ room.location }}
+        <i class="icon-location"></i> {{ room.city }}
       </div>
     </div>
 
@@ -54,9 +54,9 @@
     <div class="room-info-container">
       <div class="room-main-info">
         <div class="room-price">{{ room.price }} <span class="price-period">per month</span></div>
-        <div class="room-availability">{{ room.availability ? 'Available' : 'Not Available' }}</div>
+        <div class="room-availability">{{ room.isAvailable ? 'Available' : 'Not Available' }}</div>
 
-        <div class="room-amenities-preview">
+        <div class="room-amenities-preview" *ngIf="room.amenities && typeof room.amenities === 'string'">
           <h3>Amenities</h3>
           <div class="amenities-tags">
             <span *ngFor="let amenity of room.amenities.split(',').slice(0, 3)" class="amenity-tag">
@@ -71,8 +71,8 @@
 
       <div class="host-info">
         <h3>Hosted by</h3>
-        <div class="host-details">
-          <div class="host-name">{{ room.hostName }}</div>
+        <div class="host-details" *ngIf="room.host">
+          <div class="host-name">{{ room.host.firstName }} {{ room.host.lastName }}</div>
           <button (click)="viewHostProfile()" class="btn-view-profile">View Host Profile</button>
         </div>
       </div>
@@ -85,7 +85,7 @@
     </div>
 
     <!-- Room Amenities -->
-    <div class="room-amenities">
+    <div class="room-amenities" *ngIf="room.amenities && typeof room.amenities === 'string'">
       <h2>Amenities</h2>
       <div class="amenities-list">
         <div *ngFor="let amenity of room.amenities.split(',')" class="amenity-item">

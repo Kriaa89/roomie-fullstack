@@ -23,7 +23,7 @@
 
       <div *ngIf="!loading.user && !loading.profile && !error.user && !error.profile && currentUser && hostProfile" class="profile-card">
         <div class="profile-image">
-          <img [src]="hostProfile.profilePicture || 'assets/images/default-profile.png'" alt="Profile Picture">
+          <img [src]="hostProfile.profilePictureUrl || 'assets/images/default-profile.png'" alt="Profile Picture">
         </div>
         <div class="profile-details">
           <h3>{{ currentUser.firstName }} {{ currentUser.lastName }}</h3>
@@ -54,13 +54,40 @@
   <section class="dashboard-section">
     <div class="section-header">
       <h2>My Rooms</h2>
-      <a routerLink="/host/rooms/new" class="btn btn-primary">Add New Room</a>
+      <a routerLink="rooms/new" class="btn btn-primary">Add New Room</a>
     </div>
 
     <div class="section-content">
-      <!-- This would be populated with room listings data -->
-      <div class="empty-state">
-        <p>You haven't listed any rooms yet. Add your first room to get started!</p>
+      <div *ngIf="loading.rooms" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading rooms...</p>
+      </div>
+
+      <div *ngIf="error.rooms" class="error-message">
+        {{ error.rooms }}
+      </div>
+
+      <div *ngIf="!loading.rooms && !error.rooms" class="cards-container">
+        <div *ngIf="rooms.length === 0" class="empty-state">
+          <p>You haven't listed any rooms yet. Add your first room to get started!</p>
+        </div>
+
+        <div *ngFor="let room of rooms" class="room-card">
+          <div class="room-image">
+            <img [src]="(room.photos && typeof room.photos === 'string' ? room.photos.split(',')[0] : null) || 'assets/images/default-room.png'" alt="Room Image">
+          </div>
+          <div class="room-details">
+            <h3>{{ room.title }}</h3>
+            <p><strong>Price:</strong> ${{ room.price }} per month</p>
+            <p><strong>Location:</strong> {{ room.city }}</p>
+            <p><strong>Available From:</strong> {{ room.availableFrom | date }}</p>
+            <p><strong>Description:</strong> {{ room.description }}</p>
+            <div class="room-actions">
+              <a [routerLink]="['/host/rooms', room.id]" class="btn btn-secondary">View Details</a>
+              <a [routerLink]="['/host/rooms', room.id, 'edit']" class="btn btn-secondary">Edit</a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -89,7 +116,7 @@
 
         <div *ngFor="let renter of availableRenters.slice(0, 3)" class="renter-card">
           <div class="renter-image">
-            <img [src]="renter.profilePicture || 'assets/images/default-profile.png'" alt="Renter Profile">
+            <img [src]="renter.profilePictureUrl || 'assets/images/default-profile.png'" alt="Renter Profile">
           </div>
           <div class="renter-details">
             <h3>{{ renter.user.firstName }} {{ renter.user.lastName }}</h3>

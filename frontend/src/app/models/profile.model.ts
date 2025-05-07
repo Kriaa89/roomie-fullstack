@@ -34,8 +34,8 @@ export interface BaseProfile {
   id: number;
   bio: string;
   city: string;
-  profilePicture: string;
-  visibility: boolean;
+  profilePictureUrl: string;
+  profileVisible: boolean;
   createdAt: string;
   updatedAt: string;
   user: User;
@@ -48,6 +48,7 @@ export interface RenterProfile extends BaseProfile {
 
 export interface RoommateHostProfile extends BaseProfile {
   skillsOffered: Skill[];
+  skillsExpected: Skill[];
   lifestylePreferences: LifestylePreference[];
 }
 
@@ -58,49 +59,51 @@ export interface OwnerProfile extends BaseProfile {
 export interface RenterProfileCreateRequest {
   bio: string;
   city: string;
-  profilePicture?: string;
+  profilePictureUrl?: string;
   skillsExpected: Skill[];
   lifestylePreferences: LifestylePreference[];
-  visibility: boolean;
+  profileVisible: boolean;
 }
 
 export interface RoommateHostProfileCreateRequest {
   bio: string;
   city: string;
-  profilePicture?: string;
+  profilePictureUrl?: string;
   skillsOffered: Skill[];
+  skillsExpected: Skill[];
   lifestylePreferences: LifestylePreference[];
-  visibility: boolean;
+  profileVisible: boolean;
 }
 
 export interface OwnerProfileCreateRequest {
   bio: string;
   city: string;
-  profilePicture?: string;
-  visibility: boolean;
+  profilePictureUrl?: string;
+  profileVisible: boolean;
 }
 
 export interface RenterProfileUpdateRequest {
   bio?: string;
   city?: string;
-  profilePicture?: string;
+  profilePictureUrl?: string;
   skillsExpected?: Skill[];
   lifestylePreferences?: LifestylePreference[];
-  visibility?: boolean;
+  profileVisible?: boolean;
 }
 
 export interface RoommateHostProfileUpdateRequest {
   bio?: string;
   city?: string;
-  profilePicture?: string;
+  profilePictureUrl?: string;
   skillsOffered?: Skill[];
+  skillsExpected?: Skill[];
   lifestylePreferences?: LifestylePreference[];
-  visibility?: boolean;
+  profileVisible?: boolean;
 }
 
 export interface OwnerProfileUpdateRequest {
   bio?: string;
   city?: string;
-  profilePicture?: string;
-  visibility?: boolean;
+  profilePictureUrl?: string;
+  profileVisible?: boolean;
 }

@@ -48,7 +48,7 @@ public class RoommateHostProfileService {
         return roommateHostProfileRepository.findByCity(city);
     }
 
-    public List<RoommateHostProfile> getVisibleRoommateHostProfiles() {
+    public List<RoommateHostProfile> getAllVisibleRoommateHostProfiles() {
         return roommateHostProfileRepository.findByProfileVisibleTrue();
     }
 
@@ -73,9 +73,5 @@ public class RoommateHostProfileService {
                     return profile.isProfileVisible();
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Roommate host profile not found"));
-    }
-
-    public List<RoommateHostProfile> getAllVisibleRoommateHostProfiles() {
-        return getVisibleRoommateHostProfiles();
     }
 }

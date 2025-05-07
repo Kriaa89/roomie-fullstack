@@ -6,10 +6,12 @@ import { UserService } from '../../../services/user.service';
 import { ProfileService } from '../../../services/profile.service';
 import { SwipeService } from '../../../services/swipe.service';
 import { VisitRequestService } from '../../../services/visit-request.service';
+import { RoomService } from '../../../services/room.service';
 import { User } from '../../../models/user.model';
 import { RoommateHostProfile, RenterProfile } from '../../../models/profile.model';
 import { Match } from '../../../models/swipe.model';
 import { VisitRequest } from '../../../models/visit-request.model';
+import { Room } from '../../../models/room.model';
 
 @Component({
   selector: 'app-roommate-host-dashboard',
@@ -24,19 +26,22 @@ export class RoommateHostDashboardComponent implements OnInit {
   availableRenters: RenterProfile[] = [];
   matches: Match[] = [];
   visitRequests: VisitRequest[] = [];
+  rooms: Room[] = [];
   loading = {
     user: true,
     profile: true,
     renters: true,
     matches: true,
-    visits: true
+    visits: true,
+    rooms: true
   };
   error = {
     user: '',
     profile: '',
     renters: '',
     matches: '',
-    visits: ''
+    visits: '',
+    rooms: ''
   };
 
   constructor(
@@ -44,7 +49,8 @@ export class RoommateHostDashboardComponent implements OnInit {
     private userService: UserService,
     private profileService: ProfileService,
     private swipeService: SwipeService,
-    private visitRequestService: VisitRequestService
+    private visitRequestService: VisitRequestService,
+    private roomService: RoomService
   ) { }
 
   ngOnInit(): void {
@@ -78,6 +84,8 @@ export class RoommateHostDashboardComponent implements OnInit {
       next: (profile) => {
         this.hostProfile = profile;
         this.loading.profile = false;
+        // Load rooms after host profile is loaded
+        this.loadRooms();
       },
       error: (error) => {
         this.error.profile = 'Failed to load host profile';
@@ -127,6 +135,25 @@ export class RoommateHostDashboardComponent implements OnInit {
         console.error('Error loading visit requests:', error);
       }
     });
+  }
+
+  private loadRooms(): void {
+    if (this.hostProfile && this.hostProfile.id) {
+      this.roomService.getRoomsByHostId(this.hostProfile.id).subscribe({
+        next: (rooms) => {
+          this.rooms = rooms;
+          this.loading.rooms = false;
+        },
+        error: (error) => {
+          this.error.rooms = 'Failed to load rooms';
+          this.loading.rooms = false;
+          console.error('Error loading rooms:', error);
+        }
+      });
+    } else {
+      // If host profile is not loaded yet, wait for it
+      this.loading.rooms = true;
+    }
   }
 
   // Method to handle visit request approval

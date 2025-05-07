@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -94,7 +95,8 @@ public class RoomListingController {
         listing.setAddress(listingDto.getAddress());
         listing.setCity(listingDto.getCity());
         listing.setAvailableFrom(listingDto.getAvailableFrom());
-        listing.setActive(listingDto.isActive());
+        // Use isAvailable if provided, otherwise fall back to active
+        listing.setActive(listingDto.isIsAvailable() || listingDto.isActive());
 
         RoomListing updatedListing = roomListingService.updateRoomListing(listing);
         return ResponseEntity.ok(mapToDto(updatedListing));
@@ -147,17 +149,56 @@ public class RoomListingController {
         return ResponseEntity.ok(listingDtos);
     }
 
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ROOMMATE_HOST')")
+    public ResponseEntity<RoomListingDto> toggleListingAvailability(
+            @PathVariable Long id,
+            @RequestBody Map<String, Boolean> updates,
+            Authentication authentication) {
+
+        AppUser currentUser = (AppUser) authentication.getPrincipal();
+        RoommateHostProfile hostProfile = roommateHostProfileService.getRoommateHostProfileByUserId(currentUser.getId())
+                .orElseThrow(() -> new RuntimeException("Host profile not found"));
+
+        RoomListing listing = roomListingService.getRoomListingById(id)
+                .orElseThrow(() -> new RuntimeException("Listing not found"));
+
+        // Verify ownership
+        if (!listing.getHost().getId().equals(hostProfile.getId())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        // Check for both active and isAvailable fields
+        Boolean newActiveValue = updates.get("active");
+        Boolean newIsAvailableValue = updates.get("isAvailable");
+
+        // Use isAvailable if provided, otherwise use active
+        boolean newValue = (newIsAvailableValue != null) ? newIsAvailableValue : 
+                          (newActiveValue != null) ? newActiveValue : 
+                          !listing.isActive(); // Toggle if neither is provided
+
+        listing.setActive(newValue);
+        RoomListing updatedListing = roomListingService.updateRoomListing(listing);
+        return ResponseEntity.ok(mapToDto(updatedListing));
+    }
+
     private RoomListingDto mapToDto(RoomListing listing) {
+        // Convert photos list to comma-separated string for frontend compatibility
+        String photosString = listing.getPhotos() != null ? 
+                String.join(",", listing.getPhotos()) : "";
+
         return RoomListingDto.builder()
                 .id(listing.getId())
                 .title(listing.getTitle())
                 .description(listing.getDescription())
                 .photos(listing.getPhotos())
+                .photosString(photosString) // Add photos as comma-separated string
                 .price(listing.getPrice())
                 .address(listing.getAddress())
                 .city(listing.getCity())
                 .availableFrom(listing.getAvailableFrom())
                 .active(listing.isActive())
+                .isAvailable(listing.isActive()) // Map active to isAvailable for frontend compatibility
                 .hostId(listing.getHost().getId())
                 .hostName(listing.getHost().getAppUser().getFirstName() + " " + listing.getHost().getAppUser().getLastName())
                 .hostProfilePicture(listing.getHost().getProfilePictureUrl())

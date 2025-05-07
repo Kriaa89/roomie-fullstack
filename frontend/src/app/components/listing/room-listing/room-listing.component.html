@@ -32,16 +32,16 @@
 
     <div *ngFor="let room of rooms" class="room-card">
       <div class="room-image">
-        <img [src]="room.images.split(',')[0] || 'assets/images/default-room.png'" alt="{{ room.title }}">
+        <img [src]="(room.photos && typeof room.photos === 'string') ? room.photos.split(',')[0] : 'assets/images/default-room.png'" alt="{{ room.title }}">
       </div>
       <div class="room-details">
         <h2>{{ room.title }}</h2>
-        <p class="room-location">{{ room.location }}</p>
+        <p class="room-location">{{ room.city }}</p>
         <p class="room-price">{{ room.price }} <span class="price-period">per month</span></p>
         <div class="host-info">
-          <span>Hosted by {{ room.hostName }}</span>
+          <span>Hosted by {{ room.hostName || 'Unknown Host' }}</span>
         </div>
-        <p class="room-amenities">
+        <p class="room-amenities" *ngIf="room.amenities && typeof room.amenities === 'string'">
           <span *ngFor="let amenity of room.amenities.split(',')" class="amenity-tag">{{ amenity }}</span>
         </p>
         <div class="room-actions">

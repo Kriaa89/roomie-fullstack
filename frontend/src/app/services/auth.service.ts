@@ -2,7 +2,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
-import { AuthResponse, LoginRequest, RegisterRequest } from '../models/auth.model';
+import { AuthResponse, LoginRequest, RefreshTokenRequest, RegisterRequest } from '../models/auth.model';
 import { Role } from '../models/role.model';
 import { environment } from '../../environments/environment';
 import { jwtDecode } from 'jwt-decode';
@@ -149,15 +149,27 @@ export class AuthService {
           // If user is still logged in, refresh the token
           if (this.currentUserValue) {
             console.log('Token is about to expire. Refreshing...');
-            // You would typically call a refresh token endpoint here
-            // For now, we'll just log the user out if no refresh token endpoint exists
-            this.logout();
-            window.location.href = '/login';
+            this.refreshToken(token).subscribe({
+              next: (response) => {
+                console.log('Token refreshed successfully');
+                this.setSession(response);
+              },
+              error: (error) => {
+                console.error('Error refreshing token:', error);
+                this.logout();
+                window.location.href = '/login';
+              }
+            });
           }
         }, refreshTime);
       }
     } catch (error) {
       console.error('Error setting up token refresh:', error);
     }
+  }
+
+  refreshToken(token: string): Observable<AuthResponse> {
+    const request: RefreshTokenRequest = { token };
+    return this.http.post<AuthResponse>(`${this.API_URL}/refresh-token`, request);
   }
 }

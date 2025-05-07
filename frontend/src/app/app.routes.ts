@@ -24,9 +24,9 @@ import { PropertyListingComponent } from './components/listing/property-listing/
 import { RoomListingComponent } from './components/listing/room-listing/room-listing.component';
 import { PropertyDetailComponent } from './components/listing/property-detail/property-detail.component';
 import { RoomDetailComponent } from './components/listing/room-detail/room-detail.component';
-// These components don't exist yet and will be implemented later
-// import { PropertyFormComponent } from './components/listing/property-form/property-form.component';
-// import { RoomFormComponent } from './components/listing/room-form/room-form.component';
+// All listing form components are now implemented
+import { PropertyFormComponent } from './components/listing/property-form/property-form.component';
+import { RoomFormComponent } from './components/listing/room-form/room-form.component';
 
 // Swipe components
 import { PropertySwipeComponent } from './components/swipe/property-swipe/property-swipe.component';
@@ -77,9 +77,9 @@ export const routes: Routes = [
       { path: '', component: OwnerDashboardComponent },
       { path: 'profile', component: OwnerProfileComponent },
       { path: 'properties', component: PropertyListingComponent },
-      // These routes are commented out until the components are implemented
-      // { path: 'properties/new', component: PropertyFormComponent },
-      // { path: 'properties/edit/:id', component: PropertyFormComponent },
+      // These routes are now implemented
+      { path: 'properties/new', component: PropertyFormComponent },
+      { path: 'properties/edit/:id', component: PropertyFormComponent },
       { path: 'properties/:id', component: PropertyDetailComponent },
       { path: 'visits', component: VisitRequestListComponent },
       { path: 'notifications', component: NotificationComponent }
@@ -95,9 +95,9 @@ export const routes: Routes = [
       { path: '', component: RoommateHostDashboardComponent },
       { path: 'profile', component: RoommateHostProfileComponent },
       { path: 'rooms', component: RoomListingComponent },
-      // These routes are commented out until the components are implemented
-      // { path: 'rooms/new', component: RoomFormComponent },
-      // { path: 'rooms/edit/:id', component: RoomFormComponent },
+      // These routes are now implemented
+      { path: 'rooms/new', component: RoomFormComponent },
+      { path: 'rooms/edit/:id', component: RoomFormComponent },
       { path: 'rooms/:id', component: RoomDetailComponent },
       { path: 'renters', component: RenterSwipeComponent },
       { path: 'matches', component: MatchListComponent },

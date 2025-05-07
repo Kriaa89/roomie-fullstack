@@ -1,25 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-
-// Since we don't have a RoomService yet, we'll define a simple Room interface here
-interface Room {
-  id: number;
-  title: string;
-  description: string;
-  price: string;
-  location: string;
-  images: string;
-  amenities: string;
-  availability: boolean;
-  hostId: number;
-  hostName: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { RoomService } from '../../../services/room.service';
+import { Room } from '../../../models/room.model';
 
 @Component({
   selector: 'app-room-listing',
@@ -33,14 +16,14 @@ export class RoomListingComponent implements OnInit {
   loading = true;
   error = '';
 
-  constructor(private http: HttpClient) { }
+  constructor(private roomService: RoomService) { }
 
   ngOnInit(): void {
     this.loadRooms();
   }
 
   private loadRooms(): void {
-    this.getRooms().subscribe({
+    this.roomService.getRooms().subscribe({
       next: (rooms) => {
         this.rooms = rooms;
         this.loading = false;
@@ -53,11 +36,6 @@ export class RoomListingComponent implements OnInit {
     });
   }
 
-  // Method to get rooms from the API
-  private getRooms(): Observable<Room[]> {
-    return this.http.get<Room[]>(`${environment.apiUrl}/rooms`);
-  }
-
   // Method to filter rooms (can be expanded later)
   filterRooms(searchTerm: string): void {
     if (!searchTerm) {
@@ -66,12 +44,13 @@ export class RoomListingComponent implements OnInit {
     }
 
     // Simple client-side filtering
-    this.getRooms().subscribe({
+    this.roomService.getRooms().subscribe({
       next: (rooms) => {
         this.rooms = rooms.filter(room =>
           room.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          room.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          room.description.toLowerCase().includes(searchTerm.toLowerCase())
+          room.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          room.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (room.hostName && room.hostName.toLowerCase().includes(searchTerm.toLowerCase()))
         );
         this.loading = false;
       },

@@ -1,4 +1,5 @@
 import { Role } from './role.model';
+import { RenterProfile, RoommateHostProfile, OwnerProfile } from './profile.model';
 
 export interface User {
   id: number;
@@ -14,6 +15,12 @@ export interface User {
   updatedAt: string;
   roles: Role[];
 }
+
+// Alias for Role enum for backward compatibility
+export import UserRole = Role;
+
+// Union type of all profile types for backward compatibility
+export type UserProfile = RenterProfile | RoommateHostProfile | OwnerProfile;
 
 export interface UserUpdateRequest {
   firstName?: string;
